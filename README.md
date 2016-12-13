@@ -12,7 +12,7 @@
 │     │        └── Lock			          # 门锁应用 
 │     ├── Tools				                # 配置文件
 │     └── ZMain				                # 启动程序   
-└── Components				             # Ti公司定义
+└── Components				              # Ti公司定义
       ├── hal             			      # 硬件驱动
       ├── mac          			          # MAC层
       ├── mt          			          # 串口通信
