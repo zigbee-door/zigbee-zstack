@@ -1,0 +1,5 @@
+#动态库（Z-Stack协议是半开源的，这里看不到源代码）
+Projects/zstack/Libraries
+#IAR配置文件和项目编译生成的文件
+Projects/zstack/Samples/ZigbeeZstack/CC2530DB
+
