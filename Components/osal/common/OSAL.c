@@ -1025,7 +1025,7 @@ void osal_start_system( void )
 #endif
   {
     uint8 idx = 0;
-
+    
     osalTimeUpdate();   //扫描哪个事件被触发了，然后置相应的标志位
     Hal_ProcessPoll();  //轮询TIMER和UART
     
@@ -1064,7 +1064,29 @@ void osal_start_system( void )
 #if defined( POWER_SAVING )
     else  // Complete pass through all task events with no activity?
     {
-      osal_pwrmgr_powerconserve();  // Put the processor/system into sleep
+      osal_pwrmgr_powerconserve();  // 如果所有的任务没有事件发生，那么处理器将进入休眠状态Put the processor/system into sleep
+      
+      //系统会自己计算下一次任务的时间，然后设置睡眠的时间，
+      //保证时间到的时候自己唤醒，比如你用osal_start_timerEx（taskid, event, timeout)设置了一个任务，
+      //假设你只有这个任务，那么设置完后系统就会休眠timeout毫秒的时间，
+      //超时后唤醒然后进入taskid任务的event事件。
+      //实际上这中间系统还有可能唤醒执行NWK层、MAC层或者HAL层等等其他层的任务，
+      //对你的应用层来说，你可以认为睡眠时间就是你设置的osal_timeout的值。
+      //查看源代码P331 Zigbee技术原理与实践
+      
+      //如果你用Z-stack的话，休眠时间不是你自己定，
+      //而是有系统自己设定，每次都是以最近发生的那个osal_timeout作为休眠时间。
+      
+      //这个timeout主要分为两类，一类是应用层事件的timeout，另外一类是MAC层事件的timeout，
+      //应用层的timeout的时间，是在osal_pwrmgr_powerconserve( void )函数中，
+      //通过osal_next_timeout();获得的。
+      //MAC层的timeout时间，是通过halSleep( uint16 osal_timeout )函数里面，
+      //通过MAC_PwrNextTimeout();来获得的。
+      
+      //在http://www.deyisupport.com/question_answer/wireless_connectivity/zigbee/f/104/t/75525.aspx这个帖子中说
+      //用 ZDApp_StopJoiningCycle( void )让节点停止搜寻网络，可以达到节电的目的
+      
+      
     }
 #endif
   }

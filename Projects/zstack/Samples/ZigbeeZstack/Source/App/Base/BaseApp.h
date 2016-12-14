@@ -58,7 +58,7 @@ extern "C"
 // device's needs
 //这些定义在Zigbee简单端点描述符中  
 #define BASEAPP_ENDPOINT           20         //端点号定义为20
-#define BASEAPP_PROFID             0x0F08     //簇ID
+#define BASEAPP_PROFID             0x0F08     // 
 #define BASEAPP_DEVICEID           0x0001     //设备ID
 #define BASEAPP_DEVICE_VERSION     0          //设备版本号
 #define BASEAPP_FLAGS              0          //保留

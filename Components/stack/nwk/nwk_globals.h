@@ -221,7 +221,7 @@ extern "C" {
 
 // Maximum number in tables
 #if !defined( NWK_MAX_DEVICE_LIST )
-  #define NWK_MAX_DEVICE_LIST     20  // Maximum number of devices in the
+  #define NWK_MAX_DEVICE_LIST     20  // 其实就是定义最大的孩子数目 Maximum number of devices in the
                                     // Assoc/Device list.
 #endif
 
@@ -272,7 +272,7 @@ extern "C" {
 #define NWK_ADDRESSING_STOCHASTIC     0x02
   
 #if !defined ( NWK_LINK_STATUS_PERIOD )
-  #define NWK_LINK_STATUS_PERIOD 15       // 15 seconds
+  #define NWK_LINK_STATUS_PERIOD 15       //路由请求命令帧默认发送间隔15s，可以设置么？  15 seconds
 #endif
 
 #if !defined ( NWK_ROUTE_AGE_LIMIT )

@@ -46,7 +46,7 @@
  */
 
 // This list should be filled with Application specific Cluster IDs.
-const cId_t BaseApp_ClusterList[BASEAPP_MAX_CLUSTERS] = //输入输出簇列表
+const cId_t BaseApp_ClusterList[BASEAPP_MAX_CLUSTERS] = //输入输出簇列表，这个是否也可以作为命令簇ID?
 {
   BASEAPP_PERIODIC_CLUSTERID,    //广播的簇:0x01
   BASEAPP_FLASH_CLUSTERID        //组播的簇:0x02
@@ -258,6 +258,8 @@ uint16 BaseApp_ProcessEvent( uint8 task_id, uint16 events )
   (void)task_id;  
 
   /*如果大事件是接收系统消息*/ //则接收系统消息再进行判断
+  //提取系统类消息
+  
   //系统消息可以分为按键事件，AF数据接收事件和网络状态改变事件
   if ( events & SYS_EVENT_MSG )
   {
@@ -339,7 +341,7 @@ uint16 BaseApp_ProcessEvent( uint8 task_id, uint16 events )
 
     // return unprocessed events
      //两者相异或，返回未处理的事件，return到osal_start_system()下的events = (tasksArr[idx])( idx, events )语句中，重新在osal_start_system()下轮询再进入此函数进行处理。
-    return (events ^ SYS_EVENT_MSG);
+    return (events ^ SYS_EVENT_MSG);  //清除系统类事件，返回未处理的任务
   }
 
   //BaseApp.c BaseApp_ProcessEvent函数内
@@ -504,7 +506,10 @@ void BaseApp_SendPeriodicMessage( void )
   //调用AF_DataRequest将数据无线广播出去
   if ( AF_DataRequest( &BaseApp_Periodic_DstAddr,   //目的节点的地址信息
                        &BaseApp_epDesc,             //端点信息
-                       BASEAPP_PERIODIC_CLUSTERID,  //簇ID信息，这里是发送的簇ID,与接收到的簇ID一一对应
+                       BASEAPP_PERIODIC_CLUSTERID,  //这个也可以是命令ID? 簇ID信息，这里是发送的簇ID,与接收到的簇ID一一对应
+                       //这个也是串ID，通过判断串ID来达到相应的作用，根据不同的串ID设置不同的功能，这样ID和功能形成了一一对应的关系
+                       //在无线控制的过程中，不需要传输大量的命令，只需要传输串ID，然后通过串ID判断需要执行的命令就可以了，这样既保证了数据的安全性
+                       //和通信的可靠性，又提高了通信的效率 ZigBee2007/PRO协议栈实验与实践 P160
                        2,                             //数据长度
                        SendData,                      //数据
                        &BaseApp_TransID,            //发送消息ID

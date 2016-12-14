@@ -23,7 +23,7 @@
   its documentation for any purpose.
 
   YOU FURTHER ACKNOWLEDGE AND AGREE THAT THE SOFTWARE AND DOCUMENTATION ARE
-  PROVIDED “AS IS” WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+  PROVIDED “AS IS?WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
   INCLUDING WITHOUT LIMITATION, ANY WARRANTY OF MERCHANTABILITY, TITLE, 
   NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL
   TEXAS INSTRUMENTS OR ITS LICENSORS BE LIABLE OR OBLIGATED UNDER CONTRACT,
@@ -361,6 +361,7 @@ UINT16 ZDApp_event_loop( uint8 task_id, UINT16 events )
     // Initialize apps and start the network
     devState = DEV_INIT;
     
+    //ÔÚÍøÂçÖÐÆô¶¯Éè±¸¡¢Ð­µ÷Æ÷¡¢Â·ÓÉÆ÷ÒÔ¼°ÖÕ¶ËÉè±¸£¬Æô¶¯Ö®ºóÉè±¸¸ù¾Ý×ÔÉíµÄÀàÐÍÈ¥½¨Á¢»ò·¢ÏÖºÍ¼ÓÈëÍøÂç
     ZDO_StartDevice( (uint8)ZDO_Config_Node_Descriptor.LogicalType, devStartMode,
                      DEFAULT_BEACON_ORDER, DEFAULT_SUPERFRAME_ORDER );
 

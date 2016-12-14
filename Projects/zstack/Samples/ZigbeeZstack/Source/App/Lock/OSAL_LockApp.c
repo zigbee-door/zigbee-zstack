@@ -84,7 +84,7 @@ const pTaskEventHandlerFn tasksArr[] = {      //taskArrÖ¸ÏòÁË¸÷ÈÎÎñÊÂ¼şµÄ´¦Àíº¯Ê
 #if defined ( ZIGBEE_FREQ_AGILITY ) || defined ( ZIGBEE_PANID_CONFLICT )
   ZDNwkMgr_event_loop,                    
 #endif
-  LockApp_ProcessEvent                      //ÓÃ»§×Ô¼ºµÄÓ¦ÓÃ²ãÈÎÎñ´¦Àíº¯Êı£¬ÓÃ»§ÔÚÖ÷ÎÄ¼şÖĞÉú³É
+  LockApp_ProcessEvent                        //ÃÅËøÎŞÏßÍ¨ĞÅÈÎÎñ,ÓÅÏÈ¼¶×îµÍ
 };
 
 
@@ -120,8 +120,8 @@ void osalInitTasks( void )
   tasksEvents = (uint16 *)osal_mem_alloc( sizeof( uint16 ) * tasksCnt); //ÎªÈÎÎñ·ÖÅä¿Õ¼ä
   osal_memset( tasksEvents, 0, (sizeof( uint16 ) * tasksCnt));  //ÈÎÎñ³õÊ¼»¯
 
-  macTaskInit( taskID++ );            //MAC²ãÈÎÎñ³õÊ¼»¯ taskID = 0 ÈÎÎñÓÅÏÈ¼¶×î¸ß 
-  nwk_init( taskID++ );               //ÍøÂç²ãÈÎÎñ³õÊ¼»¯ taskID = 1
+  macTaskInit( taskID++ );            //MAC²ãÈÎÎñ³õÊ¼»¯,ÈÎÎñÓÅÏÈ¼¶×î¸ß 
+  nwk_init( taskID++ );               //ÍøÂç²ãÈÎÎñ³õÊ¼»¯ 
   Hal_Init( taskID++ );               //Ó²¼ş³éÏó²ãÈÎÎñ³õÊ¼»¯  
 #if defined( MT_TASK )  
   MT_TaskInit( taskID++ );            
@@ -130,11 +130,11 @@ void osalInitTasks( void )
 #if defined ( ZIGBEE_FRAGMENTATION )  
   APSF_Init( taskID++ );
 #endif
-  ZDApp_Init( taskID++ );            //ZDAPPÈÎÎñ³õÊ¼»¯,ÓÃ»§ĞèÒª¿¼ÂÇ
+  ZDApp_Init( taskID++ );             //ZDAPPÈÎÎñ³õÊ¼»¯
 #if defined ( ZIGBEE_FREQ_AGILITY ) || defined ( ZIGBEE_PANID_CONFLICT )
   ZDNwkMgr_Init( taskID++ );
 #endif
-  LockApp_Init( taskID );         //LockApp³õÊ¼»¯,Ó¦ÓÃĞ­ÒéÕ»Àı³Ì£¬ÓÃ»§×Ô¼º´´½¨µÄÈÎÎñÊÇµÚ°Ë¸öÈÎÎñ£¬ÓÅÏÈ¼¶×îµÍ
+  LockApp_Init( taskID );             //ÃÅËøÎŞÏßÍ¨ĞÅÈÎÎñ³õÊ¼»¯
 }
 
 /*********************************************************************
