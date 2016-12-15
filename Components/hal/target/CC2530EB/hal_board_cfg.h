@@ -101,35 +101,43 @@
  * ------------------------------------------------------------------------------------------------
  */
 
-#if defined (HAL_BOARD_CC2530EB_REV17) && !defined (HAL_PA_LNA) && !defined (HAL_PA_LNA_CC2590)
-  #define HAL_NUM_LEDS            3
-#elif defined (HAL_BOARD_CC2530EB_REV13) || defined (HAL_PA_LNA) || defined (HAL_PA_LNA_CC2590)
-  #define HAL_NUM_LEDS            1
-#else
-  #error Unknown Board Indentifier
-#endif
+//#if defined (HAL_BOARD_CC2530EB_REV17) && !defined (HAL_PA_LNA) && !defined (HAL_PA_LNA_CC2590)
+//  #define HAL_NUM_LEDS            3
+//#elif defined (HAL_BOARD_CC2530EB_REV13) || defined (HAL_PA_LNA) || defined (HAL_PA_LNA_CC2590)
+//  #define HAL_NUM_LEDS            1
+//#else
+//  #error Unknown Board Indentifier
+//#endif
+
+
+#define HAL_NUM_LEDS  3   //这里假设LED有3个
+
 
 #define HAL_LED_BLINK_DELAY()   st( { volatile uint32 i; for (i=0; i<0x5800; i++) { }; } )
 
-/* 1 - Green */
-#define LED1_BV           BV(0)
-#define LED1_SBIT         P1_0
-#define LED1_DDR          P1DIR
-#define LED1_POLARITY     ACTIVE_HIGH
 
-#if defined (HAL_BOARD_CC2530EB_REV17)
-  /* 2 - Red */
-  #define LED2_BV           BV(1)
-  #define LED2_SBIT         P1_1
+
+#if defined (LOCK_LED)
+
+  #define LED1_BV           BV(5)         //LED1位于第5位
+  #define LED1_SBIT         P1_5          //端口是P1_5
+  #define LED1_DDR          P1DIR         //P1_0设为输出
+  #define LED1_POLARITY     ACTIVE_LOW    //LED1低电平有效
+
+  #define LED2_BV           BV(5)
+  #define LED2_SBIT         P1_5
   #define LED2_DDR          P1DIR
-  #define LED2_POLARITY     ACTIVE_HIGH
+  #define LED2_POLARITY     ACTIVE_LOW
 
-  /* 3 - Yellow */
-  #define LED3_BV           BV(4)
-  #define LED3_SBIT         P1_4
+  #define LED3_BV           BV(5)
+  #define LED3_SBIT         P1_5
   #define LED3_DDR          P1DIR
-  #define LED3_POLARITY     ACTIVE_HIGH
+  #define LED3_POLARITY     ACTIVE_LOW
+
+#elif defined (BASE_LED)
+
 #endif
+
 
 /* ------------------------------------------------------------------------------------------------
  *                                    Push Button Configuration
@@ -233,7 +241,7 @@ extern void MAC_RfFrontendSetup(void);
   /* Turn on cache prefetch mode */                              \
   PREFETCH_ENABLE();                                             \
                                                                  \
-  /* set direction for GPIO outputs  */                          \
+  /*设置LED灯端口为输出*/                                        \
   LED1_DDR |= LED1_BV;                                           \
   LED2_DDR |= LED2_BV;                                           \
   LED3_DDR |= LED3_BV;                                           \
@@ -411,7 +419,7 @@ st( \
 
 /* Set to TRUE enable LCD usage, FALSE disable it */
 #ifndef HAL_LCD
-#define HAL_LCD TRUE
+#define HAL_LCD FLASE   //禁止使用LCD
 #endif
 
 /* Set to TRUE enable LED usage, FALSE disable it */

@@ -123,12 +123,12 @@ void LockApp_Init( uint8 task_id )
   RegisterForKeys( LockApp_TaskID );
   
   /*门锁离线任务定时1s*/
-  osal_start_timerEx( LockApp_TaskID,               
-                      LOCKAPP_OFF_LINE_TASK_MSG_EVENT,
-                      LOCKAPP_OFF_LINE_TASK_MSG_TIMEOUT );
-  
+  osal_start_timerEx( LockApp_TaskID,LOCKAPP_OFF_LINE_TASK_MSG_EVENT,LOCKAPP_OFF_LINE_TASK_MSG_TIMEOUT );
   
 }
+
+
+  unsigned char flag = 0;
 
 
 /*********************************
@@ -156,8 +156,6 @@ uint16 LockApp_ProcessEvent( uint8 task_id, uint16 events )
           LockApp_HandleKeys( ((keyChange_t *)MSGpkt)->state, ((keyChange_t *)MSGpkt)->keys );
           break; 
 
-          
-          
         /*消息到来响应事件*/
         case AF_INCOMING_MSG_CMD:
           LockApp_MessageMSGCB( MSGpkt );   //调用回调函数对收到的数据进行处理
@@ -183,8 +181,6 @@ uint16 LockApp_ProcessEvent( uint8 task_id, uint16 events )
           break;
       }
 
-  
-      
       osal_msg_deallocate( (uint8 *)MSGpkt );         //释放消息占用的内存
       MSGpkt = (afIncomingMSGPacket_t *)osal_msg_receive( LockApp_TaskID ); //在列表中检索下一条需要处理的消息事件
     }
@@ -195,9 +191,16 @@ uint16 LockApp_ProcessEvent( uint8 task_id, uint16 events )
   /*定时事件*/
   if ( events & LOCKAPP_OFF_LINE_TASK_MSG_EVENT )
   {
-
+  
+    if(!flag) {
+      flag = 1;
+      HAL_TURN_ON_LED1();
+    }
+    else {
+      flag = 0;
+      HAL_TURN_OFF_LED1();
+    }
     
-
     
     osal_start_timerEx( LockApp_TaskID, LOCKAPP_OFF_LINE_TASK_MSG_EVENT,  
         (LOCKAPP_OFF_LINE_TASK_MSG_TIMEOUT + (osal_rand() & 0x00FF)) );
@@ -283,7 +286,7 @@ void LockApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
         
         #if defined(ZDO_COORDINATOR)
         HalUARTWrite(0,"CoordinatorEB-Pro 57 Receive '11' OK\n", sizeof("CoordinatorEB-Pro 57 Receive 'D1' OK\n"));//串口发送
-        HalLedBlink(HAL_LED_1,0,50,500);      //LED1间隔500ms闪烁
+        //HalLedBlink(HAL_LED_1,0,50,500);      //LED1间隔500ms闪烁
         LockApp_SendPeriodicMessage();      //协调器接收到D1后返回D1给终端，让终端LED1也闪烁
         #endif
       }
@@ -296,7 +299,7 @@ void LockApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
     //收到组播数据
     case LOCKAPP_FLASH_CLUSTERID:
       flashTime = BUILD_UINT16(pkt->cmd.Data[1], pkt->cmd.Data[2] );
-      HalLedBlink( HAL_LED_4, 4, 50, (flashTime / 4) );
+      //HalLedBlink( HAL_LED_4, 4, 50, (flashTime / 4) );
       break;
   }
 }
@@ -334,7 +337,7 @@ void LockApp_SendPeriodicMessage( void )
   }
   else
   {
-    HalLedSet(HAL_LED_1,HAL_LED_MODE_ON);
+    //HalLedSet(HAL_LED_1,HAL_LED_MODE_ON);
     // Error occurred in request to send.
   }
 }
