@@ -2,13 +2,10 @@
   Filename:       LockApp.c
   Date:           2016-12-13 $
   Revision:       1.0
-  Description:    基站应用程序
+  Description:    门锁应用程序
   Author:         zhuxiankang
 **************************************************************************************************/
 
-/*********************************************************************
- * INCLUDES
- */
 #include "OSAL.h"
 #include "ZGlobals.h"
 #include "AF.h"
@@ -16,43 +13,33 @@
 #include "ZDApp.h"
 
 #include "LockApp.h"
-//#include "LockAppHw.h"    这个暂时不用
+//#include "LockAppHw.h"
 
 #include "OnBoard.h"
 
 
-/* HAL */
-#include "hal_lcd.h" //这里是硬件抽象层的头文件
+/* 硬件抽象层HAL */
+#include "hal_lcd.h"     
 #include "hal_led.h"
 #include "hal_key.h"
 #include "MT_UART.h"
 #include "MT_APP.h"
 #include "MT.h"
 
-/*********************************************************************
- * MACROS
- */
 
 /*********************************************************************
- * CONSTANTS
+ * 全局变量
  */
 
-/*********************************************************************
- * TYPEDEFS
- */
-
-/*********************************************************************
- * GLOBAL VARIABLES
- */
-
-// This list should be filled with Application specific Cluster IDs.
-const cId_t LockApp_ClusterList[LOCKAPP_MAX_CLUSTERS] = //输入输出簇列表
+/*输入输出簇列表，命令列表*/
+const cId_t LockApp_ClusterList[LOCKAPP_MAX_CLUSTERS] = 
 {
   LOCKAPP_PERIODIC_CLUSTERID,    //广播的簇:0x01
   LOCKAPP_FLASH_CLUSTERID        //组播的簇:0x02
 };
 
-const SimpleDescriptionFormat_t LockApp_SimpleDesc = //Zigbee简单端点描述符定义
+/*Zigbee简单端点描述符*/
+const SimpleDescriptionFormat_t LockApp_SimpleDesc = 
 {
   LOCKAPP_ENDPOINT,              //端点号:20
   LOCKAPP_PROFID,                //端点的簇ID:0x0F08
@@ -65,30 +52,18 @@ const SimpleDescriptionFormat_t LockApp_SimpleDesc = //Zigbee简单端点描述符定义
   (cId_t *)LockApp_ClusterList   //输出簇列表（输入簇和输出簇要一一对应）
 };
 
-// This is the Endpoint/Interface description.  It is defined here, but
-// filled-in in LockApp_Init().  Another way to go would be to fill
-// in the structure here and make it a "const" (in code space).  The
-// way it's defined in this sample app it is define in RAM.
+/*端点信息结构体*/
 endPointDesc_t LockApp_epDesc;
 
-/*********************************************************************
- * EXTERNAL VARIABLES
- */
 
 /*********************************************************************
- * EXTERNAL FUNCTIONS
+ * 本地变量
  */
 
-/*********************************************************************
- * LOCAL VARIABLES
- */
+uint8 LockApp_TaskID;                   // 任务ID 
+devStates_t LockApp_NwkState;           //网络状态
 
-uint8 LockApp_TaskID;   // 任务ID Task ID for internal task/event processing
-                          // This variable will be received when
-                          // LockApp_Init() is called.
-devStates_t LockApp_NwkState;   //网络状态
-
-uint8 LockApp_TransID;  // 传输序列ID This is the unique message ID (counter)
+uint8 LockApp_TransID;                  // 传输序列ID
 
 afAddrType_t LockApp_Periodic_DstAddr;  //发送数据的广播目的地址
 afAddrType_t LockApp_Flash_DstAddr;     //发送数据的组播目的地址
@@ -99,226 +74,108 @@ uint8 LockAppPeriodicCounter = 0;       //发送次数统计
 uint8 LockAppFlashCounter = 0;
 
 /*********************************************************************
- * LOCAL FUNCTIONS
+ * 本地函数
  */
-void LockApp_HandleKeys( uint8 shift, uint8 keys ); //函数声明
+void LockApp_HandleKeys( uint8 shift, uint8 keys ); 
 void LockApp_MessageMSGCB( afIncomingMSGPacket_t *pckt );
 void LockApp_SendPeriodicMessage( void );
 void LockApp_SendFlashMessage( uint16 flashTime );
 
-/*********************************************************************
- * NETWORK LAYER CALLBACKS
- */
 
 /*********************************************************************
- * PUBLIC FUNCTIONS
+ * 公共函数
  */
 
-/*********************************************************************
- * @fn      LockApp_Init
- *
- * @brief   Initialization function for the Generic App Task.
- *          This is called during initialization and should contain
- *          any application specific initialization (ie. hardware
- *          initialization/setup, table initialization, power up
- *          notificaiton ... ).
- *
- * @param   task_id - the ID assigned by OSAL.  This ID should be
- *                    used to send messages and set timers.
- *
- * @return  none
- */
-
-
-
-/*任务初始化函数！！！！！！！！！！！！！！！！！*/
+/*********************************
+  Funcname:       LockApp_Init
+  Description:    任务初始化函数
+  Author:         zhuxiankang
+  parm:           task_id -> 任务序列号
+*********************************/
 
 void LockApp_Init( uint8 task_id )
 { 
-  LockApp_TaskID = task_id;         //osal分配的任务ID，随着用户添加任务的增多而改变
+  /*变量初始化*/
+  LockApp_TaskID = task_id;         //任务ID
   LockApp_NwkState = DEV_INIT;      //网络状态初始化为DEV_INIT
-  /*初始化应用设备的网络类型，设备类型的改变都要产生一个事件—ZDO_STATE_CHANGE，从字面理解为
-//ZDO状态发生了改变。所以在设备初始化的时候一定要把它初始化为什么状态都没有。那么它就要去检测
-//整个环境，看是否能重新建立或者加入存在的网络。但是有一种情况例外，就是当NV_RESTORE被设置的
-//时候（NV_RESTORE是把信息保存在非易失存储器中），那么当设备断电或者某种意外重启时，由于网络
-//状态存储在非易失存储器中，那么此时就只需要恢复其网络状态，而不需要重新建立或者加入网络了*/
-  LockApp_TransID = 0;              //传输序列号初始化0,消息发送ID（多消息时有顺序之分）
+  LockApp_TransID = 0;              //传输序列ID  
   
-  //------------------------配置串口---------------------------------
-  MT_UartInit();                    //串口初始化
-  MT_UartRegisterTaskID(task_id);   //注册串口任务
-  HalUARTWrite(0,"UartInit OK\n", sizeof("UartInit OK\n"));
-  //-----------------------------------------------------------------
+  /*驱动初始化*/
   
-  // Device hardware initialization can be added here or in main() (Zmain.c).
-  // If the hardware is application specific - add it here.
-  // If the hardware is other parts of the device add it in main().
-
- #if defined ( BUILD_ALL_DEVICES )
-  // The "Demo" target is setup to have BUILD_ALL_DEVICES and HOLD_AUTO_START
-  // We are looking at a jumper (defined in LockAppHw.c) to be jumpered
-  // together - if they are - we will start up a coordinator. Otherwise,
-  // the device will start as a router.
-  if ( readCoordinatorJumper() )
-    zgDeviceLogicalType = ZG_DEVICETYPE_COORDINATOR;
-  else
-    zgDeviceLogicalType = ZG_DEVICETYPE_ROUTER;
-#endif // BUILD_ALL_DEVICES
-//该段的意思是，如果设置了 HOLD_AUTO_START 宏定义，
-//将会在启动芯片的时候会暂停启动流程，
-//只有外部触发以后才会启动芯片。其实就是需要一个按钮触发它的启动流程。
   
-#if defined ( HOLD_AUTO_START ) 
-  // HOLD_AUTO_START is a compile option that will surpress ZDApp
-  //  from starting the device and wait for the application to
-  //  start the device.
-  ZDOInitDevice(0);   //ZDO初始化
-#endif
-
+  /*单播设置*/  
+  LockApp_Periodic_DstAddr.addrMode = (afAddrMode_t)Addr16Bit;      //15:广播
+  LockApp_Periodic_DstAddr.endPoint = LOCKAPP_ENDPOINT;             //端点号：20
+  LockApp_Periodic_DstAddr.addr.shortAddr = 0x0000;                 //协调器地址
   
-  /* 设置发送数据的方式和目的地址寻址模式*/
-  //---------------------------
-  //周期消息，广播发送
-  // Setup for the periodic message's destination address
-  // Broadcast to everyone
-  /*广播到所有设备，数据的广播地址初始化*/
-  LockApp_Periodic_DstAddr.addrMode = (afAddrMode_t)AddrBroadcast;//15:广播
-  LockApp_Periodic_DstAddr.endPoint = LOCKAPP_ENDPOINT;         //端点号：20
-  LockApp_Periodic_DstAddr.addr.shortAddr = 0xFFFF;               //16位网络地址:0xFFFF
-  
-  /*单播到一个设备*/
-//  (WXL_LockApp_Single_DstAddr.addrMode = (afAddrMode_t)Addr16Bit;;
-//  WXL_LockApp_Single_DstAddr.endPoint = WXL_LOCKAPP_ENDPOINT;
-//  LockApp_Periodic_DstAddr.addr.shortAddr = 0xFFFF;
  
-//  LockApp_Periodic_DstAddr.addrMode = (afAddrMode_t)Addr16Bit;    //2:单播
-//  LockApp_Periodic_DstAddr.endPoint = LOCKAPP_ENDPOINT;         //端点号：20
-  //  LockApp_Periodic_DstAddr.addr.shortAddr = 0x0000;               //16位网络地址:0x0000
-  
-  
-  
-  
-  //--------------------------
-  /*数组的组播信息初始化*/
-  // Setup for the flash command's destination address - Group 1
-  LockApp_Flash_DstAddr.addrMode = (afAddrMode_t)afAddrGroup;    //1:组播
-  LockApp_Flash_DstAddr.endPoint = LOCKAPP_ENDPOINT;           //端点号：20
-  LockApp_Flash_DstAddr.addr.shortAddr = LOCKAPP_FLASH_GROUP;  //16位网络地址:0x0001,同时设置为组号
-
-  // Fill out the endpoint description.
   /*定义本设备用来通信的APS层端点描述符*/
-  /*端点信息初始化*/
-  LockApp_epDesc.endPoint = LOCKAPP_ENDPOINT;                   //LockApp EP描述符的EP号：20
-  LockApp_epDesc.task_id = &LockApp_TaskID;                     //LockApp EP描述符的任务ID，详细见函数头部 
+  LockApp_epDesc.endPoint = LOCKAPP_ENDPOINT;                     //端点号：20
+  LockApp_epDesc.task_id = &LockApp_TaskID;                       //任务ID 
   LockApp_epDesc.simpleDesc
-            = (SimpleDescriptionFormat_t *)&LockApp_SimpleDesc;   //LockApp EP简单描述符
-  LockApp_epDesc.latencyReq = noLatencyReqs;                      //延时策略
-
-  // Register the endpoint description with the AF
-  /*向AF层登记EP描述符*/
-  /*登记endpoint description 到AF,要对该应用进行初始化并在AF进行登记，告诉应用层有这么一个EP已
-  经开通可以使用，那么下层要是有关于该应用的信息或者应用要对下层做哪些操作，就自动得到下层的配
-  合。*/
+            = (SimpleDescriptionFormat_t *)&LockApp_SimpleDesc;   //Zigbee简单端点描述符
+  LockApp_epDesc.latencyReq = noLatencyReqs;                      //无延时策略
+  
+  /*在AF中注册端点20*/
   afRegister( &LockApp_epDesc );
 
-  // Register for all key events - This app will handle all key events
   /*注册按键事件*/
   RegisterForKeys( LockApp_TaskID );
-
-  // By default, all devices start out in Group 1 为闪烁消息配置的组
-  /*组信息初始化*/
-  LockApp_Group.ID = 0x0001;                          //组号，和LOCKAPP_FLASH_GROUP一样
-  osal_memcpy( LockApp_Group.name, "Group 1", 7  );   //设定组名
-  aps_AddGroup( LOCKAPP_ENDPOINT, &LockApp_Group ); //把该组登记添加到APS中
-
-  /*如果支持LCD，显示一串字符*/ 
-#if defined ( LCD_SUPPORTED )
-  HalLcdWriteString( "LockApp", HAL_LCD_LINE_1 );
-#endif
+  
+  /*门锁离线任务定时1s*/
+  osal_start_timerEx( LockApp_TaskID,               
+                      LOCKAPP_OFF_LINE_TASK_MSG_EVENT,
+                      LOCKAPP_OFF_LINE_TASK_MSG_TIMEOUT );
+  
+  
 }
 
-/*********************************************************************
- * @fn      LockApp_ProcessEvent
- *
- * @brief   Generic Application Task event processor.  This function
- *          is called to process all events for the task.  Events
- *          include timers, messages and any other user defined events.
- *
- * @param   task_id  - The OSAL assigned task ID.
- * @param   events - events to process.  This is a bit map and can
- *                   contain more than one event.
- *
- * @return  none
- */
 
-/*事件处理函数！！！！！！！！！！！！！！！！！*/
+/*********************************
+  Funcname:       LockApp_ProcessEvent
+  Description:    任务事件处理函数
+  Author:         zhuxiankang
+  parm:           task_id -> 任务序列号 evnets -> 事件触发标志
+*********************************/
 uint16 LockApp_ProcessEvent( uint8 task_id, uint16 events )
 {
-  afIncomingMSGPacket_t *MSGpkt;     //接收到的消息，消息包
+  afIncomingMSGPacket_t *MSGpkt;     //接收消息结构体
   (void)task_id;  
 
-  /*如果大事件是接收系统消息*/ //则接收系统消息再进行判断
-  //系统消息可以分为按键事件，AF数据接收事件和网络状态改变事件
-  if ( events & SYS_EVENT_MSG )
+  if ( events & SYS_EVENT_MSG )      //接收到系统消息
   {
-    //这里是接收到的数据包，按照结构体afIncomingMSGPacket_t的格式接收信息
     MSGpkt = (afIncomingMSGPacket_t *)osal_msg_receive( LockApp_TaskID ); //调用系统信息，接收消息包
     
-    //如果接收到信息
-    while ( MSGpkt )//接收到
+    while ( MSGpkt )
     {
-      //先判断接收到的信息是哪个事件类型
-      switch ( MSGpkt->hdr.event )
-      {
       
+      switch ( MSGpkt->hdr.event )  
+      {
         /*按键处理事件*/
         case KEY_CHANGE:
           LockApp_HandleKeys( ((keyChange_t *)MSGpkt)->state, ((keyChange_t *)MSGpkt)->keys );
-          break; //执行具体的按键处理函数，定义在sampleAPP.c中
+          break; 
 
           
           
-         /*消息到来响应事件*/
-        // 接收数据事件,调用函数AF_DataRequest()接收数据
-        // 这个是用的最多的接收信息事件
-        // Received when a messages is received (OTA) for this endpoint
+        /*消息到来响应事件*/
         case AF_INCOMING_MSG_CMD:
-          LockApp_MessageMSGCB( MSGpkt );//调用回调函数对收到的数据进行处理
+          LockApp_MessageMSGCB( MSGpkt );   //调用回调函数对收到的数据进行处理
           break;
 
-        //LockApp.c LockApp_ProcessEvent函数内
-        /*设备网络状态变化事件*/
-        // 只要网络状态发生改变，就通过ZDO_STATE_CHANGE事件通知所有的任务，注意，是所有任务都会收到这消息。
-          
-        //这里设置了一个定时函数osal_start_timerEx()，这个定时函数由网络状态变化这个事件来触发
-        //这里旨在网络状态发生变化时通知所有的其他设备？？？？
-        //也可以用作定时上传传感器数据？？？
+        /*设备网络状态变化事件，例如终端设备入网*/
         case ZDO_STATE_CHANGE:
           LockApp_NwkState = (devStates_t)(MSGpkt->hdr.status);//获取设备当前状态
           
-          //这里是设置要定时广播数据的设备
-          //例如协调器一般是不用定时广播数据的,那么这里可以屏蔽
           if ( (LockApp_NwkState == DEV_ZB_COORD)
               || (LockApp_NwkState == DEV_ROUTER)
               || (LockApp_NwkState == DEV_END_DEVICE) )
           {
-            // Start sending the periodic message in a regular interval.
-            /*按一定间隔启动定时器*/
-            //这个定时器是为发送周期信息设置的，我觉得因为在这个例子中,用户自己添加的任务,
-            //只有两个事件是用于向外发送消息的,一个是发送flash闪烁消息，属于组寻址，
-            //而另一个是发送periodic周期消息，属于广播；这里是一个设备的网络状态发生了变化，
-            //必须要告诉同一网络中的其它设备，因此要进行广播通知其它设备…发送的消息中应该会包括本设备的类型。
-            //……不知道这样理解对不对～管它的，以后会明白的～
-            //更新：这个定时器只是为发送周期信息开启的，设备启动初始化后从这里开始触发第一个周期信息的发送，
-            //然后周而复始下去.
-            //LockApp.c LockApp_ProcessEvent函数内
-            osal_start_timerEx( LockApp_TaskID,
-                              LOCKAPP_SEND_PERIODIC_MSG_EVT,
-                              LOCKAPP_SEND_PERIODIC_MSG_TIMEOUT );
+            //设备组网成功
           }
           else
           {
-            // Device is no longer in the network
+            //设备离开网络
           }
           break;
 
@@ -326,51 +183,29 @@ uint16 LockApp_ProcessEvent( uint8 task_id, uint16 events )
           break;
       }
 
-      // Release the memory
-      //以上把收到系统消息这个大事件处理完了，释放消息占用的内存
-      osal_msg_deallocate( (uint8 *)MSGpkt );
-
-      // Next - if one is available
-      /*指针指向下一个"已接收到的”［程序在while ( MSGpkt )内］放在缓冲区的待处理的事件，与
-      // LockApp_ProcessEvent处理多个事件相对应，返回while ( MSGpkt )重新处理事件，
-      //直到缓冲区没有等待处理事件为止。*/
-      MSGpkt = (afIncomingMSGPacket_t *)osal_msg_receive( LockApp_TaskID );
+  
+      
+      osal_msg_deallocate( (uint8 *)MSGpkt );         //释放消息占用的内存
+      MSGpkt = (afIncomingMSGPacket_t *)osal_msg_receive( LockApp_TaskID ); //在列表中检索下一条需要处理的消息事件
     }
 
-    // return unprocessed events
-     //两者相异或，返回未处理的事件，return到osal_start_system()下的events = (tasksArr[idx])( idx, events )语句中，重新在osal_start_system()下轮询再进入此函数进行处理。
-    return (events ^ SYS_EVENT_MSG);
+    return (events ^ SYS_EVENT_MSG);                  //返回未处理的事件
   }
 
-  //LockApp.c LockApp_ProcessEvent函数内
-  // Send a message out - This event is generated by a timer
-  //  (setup in LockApp_Init()).
-  /* 如果大事件是向外发送信息，该事件由定时器产生*/
-  //如果是定时事件，则进行定时事件处理
-  if ( events & LOCKAPP_SEND_PERIODIC_MSG_EVT )
+  /*定时事件*/
+  if ( events & LOCKAPP_OFF_LINE_TASK_MSG_EVENT )
   {
-    // Send the periodic message
-    
-    //处理周期性事件，利用LockApp_SendPeriodicMessage()处理完当前的周期性事件，
-    //然后启动定时器开启下一个周期性事情，
-    //这样一种循环下去，也即是上面说的周期性事件了，
-    //可以做为传感器定时采集、上传任务
-    
-    LockApp_SendPeriodicMessage();          //这里是发送函数，很重要！！！！！！！！！！！！！！！！！！！！
 
-    // Setup to send message again in normal period (+ a little jitter)
-    //这里为任务LockApp_TaskID的事件LOCKAPP_SEND_PERIODIC_MSG_EVT设定一个定时器，
-    //定时时间为 (LOCKAPP_SEND_PERIODIC_MSG_TIMEOUT + (osal_rand() & 0x00FF))，
-    //当时间一到，该运行的任务将被通报有事件发生。
-    //循环调用定时器
-    osal_start_timerEx( LockApp_TaskID, LOCKAPP_SEND_PERIODIC_MSG_EVT,
-        (LOCKAPP_SEND_PERIODIC_MSG_TIMEOUT + (osal_rand() & 0x00FF)) );
+    
 
-    // return unprocessed events
-    return (events ^ LOCKAPP_SEND_PERIODIC_MSG_EVT);
+    
+    osal_start_timerEx( LockApp_TaskID, LOCKAPP_OFF_LINE_TASK_MSG_EVENT,  
+        (LOCKAPP_OFF_LINE_TASK_MSG_TIMEOUT + (osal_rand() & 0x00FF)) );
+
+
+    return (events ^ LOCKAPP_OFF_LINE_TASK_MSG_EVENT);  //返回未处理的事件
   }
 
-  // Discard unknown events
   return 0;
 }
 
@@ -406,23 +241,7 @@ void LockApp_HandleKeys( uint8 shift, uint8 keys )
   //如果按键2被按下，则移除组
   if ( keys & HAL_KEY_SW_2 )
   {
-    /* The Flashr Command is sent to Group 1.
-     * This key toggles this device in and out of group 1.
-     * If this device doesn't belong to group 1, this application
-     * will not receive the Flash command sent to group 1.
-     */
-    aps_Group_t *grp;
-    grp = aps_FindGroup( LOCKAPP_ENDPOINT, LOCKAPP_FLASH_GROUP );
-    if ( grp )
-    {
-      // Remove from the group
-      aps_RemoveGroup( LOCKAPP_ENDPOINT, LOCKAPP_FLASH_GROUP );
-    }
-    else
-    {
-      // Add to the flash group
-      aps_AddGroup( LOCKAPP_ENDPOINT, &LockApp_Group );
-    }
+   
   }
 }
 
