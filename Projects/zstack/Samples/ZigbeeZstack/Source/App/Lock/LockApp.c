@@ -19,7 +19,7 @@
 
 
 /* 硬件抽象层HAL */
-#include "hal_lcd.h"     
+//#include "hal_lcd.h"     
 #include "hal_led.h"
 #include "hal_key.h"
 #include "MT_UART.h"
@@ -128,7 +128,7 @@ void LockApp_Init( uint8 task_id )
 }
 
 
-  unsigned char flag = 0;
+unsigned char flag = 0; //测试LED闪烁用
 
 
 /*********************************
@@ -231,21 +231,29 @@ void LockApp_HandleKeys( uint8 shift, uint8 keys )
 {
   (void)shift;  // Intentionally unreferenced parameter
   
-  //如果按键1被按下，则组播数据
-  if ( keys & HAL_KEY_SW_1 )
-  {
-    /* This key sends the Flash Command is sent to Group 1.
-     * This device will not receive the Flash Command from this
-     * device (even if it belongs to group 1).
-     */
-    LockApp_SendFlashMessage( LOCKAPP_FLASH_DURATION );
+//  if ( keys & HAL_KEY_SW_1 )
+//  {
+//    /* This key sends the Flash Command is sent to Group 1.
+//     * This device will not receive the Flash Command from this
+//     * device (even if it belongs to group 1).
+//     */
+//    LockApp_SendFlashMessage( LOCKAPP_FLASH_DURATION );
+//  }
+//  
+//  if ( keys & HAL_KEY_SW_2 )
+//  {
+//   
+//  }
+  
+  /* 钥匙开门 */
+  if ( keys & HAL_KEY_SW_6 ) {
+    HalLedBlink(HAL_LED_1,3,50,500);      //LED灯间隔500ms闪烁3次
   }
   
-  //如果按键2被按下，则移除组
-  if ( keys & HAL_KEY_SW_2 )
-  {
-   
-  }
+  
+  
+  
+  
 }
 
 /*********************************************************************

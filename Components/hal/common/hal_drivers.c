@@ -228,7 +228,7 @@ uint16 Hal_ProcessEvent( uint8 task_id, uint16 events )
     /* if interrupt disabled, do next polling */
     if (!Hal_KeyIntEnable)
     {
-      osal_start_timerEx( Hal_TaskID, HAL_KEY_EVENT, 100);
+      osal_start_timerEx( Hal_TaskID, HAL_KEY_EVENT, 100); //如果采集按键采用轮询方式，则每隔100ms轮询扫描有没有按键触发
     }
 #endif // HAL_KEY
 

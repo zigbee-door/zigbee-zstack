@@ -101,25 +101,29 @@
 #define HAL_KEY_RISING_EDGE   0
 #define HAL_KEY_FALLING_EDGE  1
 
-#define HAL_KEY_DEBOUNCE_VALUE  25
+#define HAL_KEY_DEBOUNCE_VALUE  25    //按键消抖时间
 #define HAL_KEY_POLLING_VALUE   100
 
 /* CPU port interrupt */
+/* 配置按键和摇杆的中断状态寄存器 */
 #define HAL_KEY_CPU_PORT_0_IF P0IF
 #define HAL_KEY_CPU_PORT_2_IF P2IF
 
 /* SW_6 is at P0.1 */
+/* SW_6是独立按键 位P0.1进行配置 */
 #define HAL_KEY_SW_6_PORT   P0
 #define HAL_KEY_SW_6_BIT    BV(1)
 #define HAL_KEY_SW_6_SEL    P0SEL
 #define HAL_KEY_SW_6_DIR    P0DIR
 
 /* edge interrupt */
+/* 中断触发方式配置 */
 #define HAL_KEY_SW_6_EDGEBIT  BV(0)
-#define HAL_KEY_SW_6_EDGE     HAL_KEY_FALLING_EDGE
+#define HAL_KEY_SW_6_EDGE     HAL_KEY_FALLING_EDGE  //下降沿触发中断
 
 
 /* SW_6 interrupts */
+/* 按键中断寄存器 */
 #define HAL_KEY_SW_6_IEN      IEN1  /* CPU interrupt mask register */
 #define HAL_KEY_SW_6_IENBIT   BV(5) /* Mask bit for all of Port_0 */
 #define HAL_KEY_SW_6_ICTL     P0IEN /* Port Interrupt Control register */
@@ -127,16 +131,19 @@
 #define HAL_KEY_SW_6_PXIFG    P0IFG /* Interrupt flag at source */
 
 /* Joy stick move at P2.0 */
+/* 摇杆P2.0寄存器配置 */
 #define HAL_KEY_JOY_MOVE_PORT   P2
 #define HAL_KEY_JOY_MOVE_BIT    BV(0)
 #define HAL_KEY_JOY_MOVE_SEL    P2SEL
 #define HAL_KEY_JOY_MOVE_DIR    P2DIR
 
 /* edge interrupt */
+/* 中断触发方式 */
 #define HAL_KEY_JOY_MOVE_EDGEBIT  BV(3)
 #define HAL_KEY_JOY_MOVE_EDGE     HAL_KEY_FALLING_EDGE
 
 /* Joy move interrupts */
+/* 摇杆中断寄存器 */
 #define HAL_KEY_JOY_MOVE_IEN      IEN2  /* CPU interrupt mask register */
 #define HAL_KEY_JOY_MOVE_IENBIT   BV(1) /* Mask bit for all of Port_2 */
 #define HAL_KEY_JOY_MOVE_ICTL     P2IEN /* Port Interrupt Control register */
@@ -184,19 +191,22 @@ uint8 halGetJoyKeyInput(void);
 void HalKeyInit( void )
 {
   /* Initialize previous key to 0 */
+  /* 初始化按键为0 */
   halKeySavedKeys = 0;
 
-  HAL_KEY_SW_6_SEL &= ~(HAL_KEY_SW_6_BIT);    /* Set pin function to GPIO */
-  HAL_KEY_SW_6_DIR &= ~(HAL_KEY_SW_6_BIT);    /* Set pin direction to Input */
-
+  HAL_KEY_SW_6_SEL &= ~(HAL_KEY_SW_6_BIT);    /* 设置为GPIO口，Set pin function to GPIO */
+  HAL_KEY_SW_6_DIR &= ~(HAL_KEY_SW_6_BIT);    /* 设置为输入模式，Set pin direction to Input */
+  
   HAL_KEY_JOY_MOVE_SEL &= ~(HAL_KEY_JOY_MOVE_BIT); /* Set pin function to GPIO */
   HAL_KEY_JOY_MOVE_DIR &= ~(HAL_KEY_JOY_MOVE_BIT); /* Set pin direction to Input */
 
 
   /* Initialize callback function */
+  /* 初始化按键回调函数为空 */
   pHalKeyProcessFunction  = NULL;
 
   /* Start with key is not configured */
+  /* 初始化后，按键标示为没有配置 */
   HalKeyConfigured = FALSE;
 }
 
@@ -438,7 +448,7 @@ void halProcessKeyInterrupt (void)
 
   if (valid)
   {
-    osal_start_timerEx (Hal_TaskID, HAL_KEY_EVENT, HAL_KEY_DEBOUNCE_VALUE);
+    osal_start_timerEx (Hal_TaskID, HAL_KEY_EVENT, HAL_KEY_DEBOUNCE_VALUE); //按键消抖
   }
 }
 

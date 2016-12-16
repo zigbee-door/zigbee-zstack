@@ -36,9 +36,9 @@ int main( void )
   
   /*1.系统初始化*/
   osal_int_disable( INTS_ALL );   //关操作系统全部中断
-  HAL_BOARD_INIT();               //初始化硬件设备
+  HAL_BOARD_INIT();               //初始化硬件设备，例如CPU的晶振以及LED的引脚输入输出等
   zmain_vdd_check();              //电源检测,检测电源是否足够运行
-  InitBoard( OB_COLD );           //初始化板子I/O、LED、Timer等
+  InitBoard( OB_COLD );           //初始化板子LED和按键等
   HalDriverInit();                //初始化硬件抽象层HAL驱动
   osal_nv_init( NULL );           //初始化非易失性单元Flash存储器
   ZMacInit();                     //初始化MAC层

@@ -97,7 +97,7 @@
 #endif
 
 /* ------------------------------------------------------------------------------------------------
- *                                       LED Configuration
+ *                                       LED Configuration(已修改)
  * ------------------------------------------------------------------------------------------------
  */
 
@@ -140,7 +140,7 @@
 
 
 /* ------------------------------------------------------------------------------------------------
- *                                    Push Button Configuration
+ *                                    Push Button Configuration(已修改)
  * ------------------------------------------------------------------------------------------------
  */
 
@@ -152,7 +152,7 @@
 #define PUSH1_SBIT        P0_1
 
 #if defined (HAL_BOARD_CC2530EB_REV17)
-  #define PUSH1_POLARITY    ACTIVE_HIGH
+  #define PUSH1_POLARITY    ACTIVE_HIGH    //门锁的钥匙开门默认低电平触发，修改这里
 #elif defined (HAL_BOARD_CC2530EB_REV13)
   #define PUSH1_POLARITY    ACTIVE_LOW
 #else
@@ -241,7 +241,7 @@ extern void MAC_RfFrontendSetup(void);
   /* Turn on cache prefetch mode */                              \
   PREFETCH_ENABLE();                                             \
                                                                  \
-  /*设置LED灯端口为输出*/                                        \
+  /*设置P1_5为输出，LED灯*/                          \
   LED1_DDR |= LED1_BV;                                           \
   LED2_DDR |= LED2_BV;                                           \
   LED3_DDR |= LED3_BV;                                           \
