@@ -12,6 +12,7 @@
   1.LED                     ->     P1_5  设置为输出
   2.钥匙开门(其实就是按键)  ->     P0_1  设置为输入，上升沿触发中断 
 
+
 **************************************************************************************************/
 
 
@@ -29,14 +30,20 @@
 #include "OnBoard.h"
 
 
-/* 硬件抽象层HAL */
-//#include "hal_lcd.h"     
+/* 硬件抽象层HAL */   
 #include "hal_led.h"    
 #include "hal_key.h"
 #include "MT_UART.h"
 #include "MT_APP.h"
 #include "MT.h"
 
+/* 门锁的硬件驱动 */
+#include "dri_buzzer.h"   //蜂鸣器驱动
+#include "dri_delay.h"    //延时函数
+
+
+/* 门锁的设备应用 */  
+#include "dev_buzzer.h"   //蜂鸣器应用
 
 /*********************************************************************
  * 全局变量
@@ -111,8 +118,9 @@ void LockApp_Init( uint8 task_id )
   LockApp_NwkState = DEV_INIT;      //网络状态初始化为DEV_INIT
   LockApp_TransID = 0;              //传输序列ID  
   
-  /*驱动初始化*/
-  
+  /*应用驱动初始化*/
+  Dri_Buzzer_Init();                //P2_0 蜂鸣器驱动初始化
+  Dri_Buzzer_Timer4_Init();         //定时器4初始化(覆盖了Z-STACK的配置)
   
   /*单播设置*/  
   LockApp_Periodic_DstAddr.addrMode = (afAddrMode_t)Addr16Bit;      //15:广播
@@ -137,9 +145,6 @@ void LockApp_Init( uint8 task_id )
   osal_start_timerEx( LockApp_TaskID,LOCKAPP_OFF_LINE_TASK_MSG_EVENT,LOCKAPP_OFF_LINE_TASK_MSG_TIMEOUT );
   
 }
-
-
-unsigned char flag = 0; //测试LED闪烁用
 
 
 /*********************************
@@ -203,16 +208,8 @@ uint16 LockApp_ProcessEvent( uint8 task_id, uint16 events )
   if ( events & LOCKAPP_OFF_LINE_TASK_MSG_EVENT )
   {
   
-    if(!flag) {
-      flag = 1;
-      HAL_TURN_ON_LED1();
-    }
-    else {
-      flag = 0;
-      HAL_TURN_OFF_LED1();
-    }
-    
-    
+   
+   
     osal_start_timerEx( LockApp_TaskID, LOCKAPP_OFF_LINE_TASK_MSG_EVENT,  
         (LOCKAPP_OFF_LINE_TASK_MSG_TIMEOUT + (osal_rand() & 0x00FF)) );
 
@@ -258,13 +255,9 @@ void LockApp_HandleKeys( uint8 shift, uint8 keys )
   
   /* 钥匙开门 */
   if ( keys & HAL_KEY_SW_6 ) {
-    HalLedBlink(HAL_LED_1,3,50,500);      //LED灯间隔500ms闪烁3次
+//    HalLedBlink(HAL_LED_1,3,50,500);      //LED灯间隔500ms闪烁3次
+    Dev_Buzzer_Key_Open();
   }
-  
-  
-  
-  
-  
 }
 
 /*********************************************************************

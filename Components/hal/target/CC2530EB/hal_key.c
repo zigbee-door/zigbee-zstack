@@ -199,7 +199,7 @@ void HalKeyInit( void )
   
   
   
-//这里取消对摇杆按键的输入口配置  
+//这里取消对摇杆按键的输入口配置,P2_0口需要配置成蜂鸣器而不是摇杆按键
 //  HAL_KEY_JOY_MOVE_SEL &= ~(HAL_KEY_JOY_MOVE_BIT); /* Set pin function to GPIO */
 //  HAL_KEY_JOY_MOVE_DIR &= ~(HAL_KEY_JOY_MOVE_BIT); /* Set pin direction to Input */
 
