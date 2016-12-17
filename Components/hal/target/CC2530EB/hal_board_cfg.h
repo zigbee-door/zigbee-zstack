@@ -152,7 +152,7 @@
 #define PUSH1_SBIT        P0_1
 
 #if defined (HAL_BOARD_CC2530EB_REV17)
-  #define PUSH1_POLARITY    ACTIVE_HIGH    //门锁的钥匙开门默认低电平触发，修改这里
+  #define PUSH1_POLARITY    ACTIVE_HIGH    //门锁的钥匙开门默认高电平触发，修改这里
 #elif defined (HAL_BOARD_CC2530EB_REV13)
   #define PUSH1_POLARITY    ACTIVE_LOW
 #else

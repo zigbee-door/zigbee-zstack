@@ -197,8 +197,11 @@ void HalKeyInit( void )
   HAL_KEY_SW_6_SEL &= ~(HAL_KEY_SW_6_BIT);    /* 设置为GPIO口，Set pin function to GPIO */
   HAL_KEY_SW_6_DIR &= ~(HAL_KEY_SW_6_BIT);    /* 设置为输入模式，Set pin direction to Input */
   
-  HAL_KEY_JOY_MOVE_SEL &= ~(HAL_KEY_JOY_MOVE_BIT); /* Set pin function to GPIO */
-  HAL_KEY_JOY_MOVE_DIR &= ~(HAL_KEY_JOY_MOVE_BIT); /* Set pin direction to Input */
+  
+  
+//这里取消对摇杆按键的输入口配置  
+//  HAL_KEY_JOY_MOVE_SEL &= ~(HAL_KEY_JOY_MOVE_BIT); /* Set pin function to GPIO */
+//  HAL_KEY_JOY_MOVE_DIR &= ~(HAL_KEY_JOY_MOVE_BIT); /* Set pin direction to Input */
 
 
   /* Initialize callback function */
