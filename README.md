@@ -8,8 +8,10 @@
 ├── Projects/zstack          		          # 用户自定义
 │     ├── Samples/ZigbeeZstack/Source	    # 源代码       
 │     │   └── App				              # Zstack协议(应用层)
-│     │        ├── Base			          # 基站应用	
-│     │        └── Lock			          # 门锁应用 
+│     │      ├── Lock			           # 门锁应用	
+│     |      |   ├── Drivers                # 门锁硬件驱动
+│     |      |   └── Devices                # 门锁设备应用
+│     │      └── Base			           # 基站应用 
 │     ├── Tools				                # 配置文件
 │     └── ZMain				                # 启动程序   
 └── Components				              # Ti公司定义
@@ -23,18 +25,33 @@
 ```
 
 
-## 驱动端口配置
+## 硬件配置
 
 
-| 端口          |     配置说明 | 
+| 端口或定时器          |     配置说明 | 
 | :--------     | :--------|
-| P1_5          |  LED灯，配置为输出 |
-| P0_1          |  钥匙开门，配置为输入，上升沿触发中断 |
+| P1_5          |  LED灯引脚，配置为输出(修改了Z-Stack中的LED配置) |
+| P0_1          |  钥匙开门引脚，配置为输入，上升沿触发中断(和Z-Stack独立按键引脚一样) |
+| P2_0          |  蜂鸣器引脚，配置为输入(修改了Z-Stack的配置，在Z-Stack中是摇杆按键引脚) |
+| T4定时器       |  T4用作PWM输出，用于控制蜂鸣器的发音频率(覆盖了默认的Z-Stack定时器配置) |
+
+## 门锁硬件驱动
+
+| 驱动文件       |     配置说明 | 
+| :--------     | :--------|
+| dri_buzzer.c  |  蜂鸣器引脚配置，P2_O引脚配置为输入，启用T4定时器设置为PWM输出，输出到引脚P2_0 |
+| dri_delay.c   |  延时函数，延时ms和us |
+
+>提示：硬件驱动程序主要在Projects/zstack/Samples/ZigbeeZstack/Source/App/Lock/Drivers文件夹下。
 
 
+## 门锁设备应用
 
+| 应用文件       |     应用说明 | 
+| :--------     | :--------|
+| dev_buzzer.c  | 蜂鸣器的应用程序，主要用于刷卡提示，系统启动提示以及钥匙开关门提示等声音提示 |
 
-
+>提示：硬件驱动程序主要在Projects/zstack/Samples/ZigbeeZstack/Source/App/Lock/Devices文件夹下。
 
 ## 进度记录
 
