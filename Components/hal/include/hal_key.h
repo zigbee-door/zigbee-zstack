@@ -75,8 +75,8 @@ extern "C"
 #define HAL_KEY_SW_5 0x04  // Joystick center 中
 #define HAL_KEY_SW_4 0x08  // Joystick left 左
 #define HAL_KEY_SW_3 0x10  // Joystick down 右
-#define HAL_KEY_SW_6 0x20  // Button S1 if available 独立按键 P0_1
-#define HAL_KEY_SW_7 0x40  // Button S2 if available 
+#define HAL_KEY_SW_6 0x20  // Button S1 if available 独立按键 P0_1 钥匙开门
+#define HAL_KEY_SW_7 0x40  // Button S2 if available 独立按键 P0_4 锁扣
 
 /* Joystick */
 #define HAL_KEY_UP     0x01  // Joystick up

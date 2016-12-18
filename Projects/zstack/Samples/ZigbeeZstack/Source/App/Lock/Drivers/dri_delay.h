@@ -15,7 +15,7 @@
  *                                          Prototypes
  * ------------------------------------------------------------------------------------------------
  */
-void Dri_DelayMs( uint16 timeout );
-void Dri_DelayUs( uint16 timeout );
+void Delay_Ms( uint16 timeout );
+void Delay_Us( uint16 timeout );
 
 #endif

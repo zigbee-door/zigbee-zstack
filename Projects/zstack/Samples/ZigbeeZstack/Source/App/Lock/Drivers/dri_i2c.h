@@ -1,38 +1,37 @@
-#ifndef DRI_BUZZER_H_
-#define DRI_BUZZER_H_
+#ifndef DRI_I2C_H_
+#define DRI_I2C_H_
 
 /* ------------------------------------------------------------------------------------------------
  *                                          Includes
  * ------------------------------------------------------------------------------------------------
  */
 #include<ioCC2530.h>
-
+#include "hal_types.h"
 
 /* ------------------------------------------------------------------------------------------------
  *                                          Define
  * ------------------------------------------------------------------------------------------------
  */
+/*I/O口引脚设定*/
+#define SCL P1_3    //P1_3口模拟时钟口
+#define SDA P1_2    //P1_2口模拟数据口
+  #define I2C_SDA_OUT()           P1DIR |= 0x04       // P1_2 = 数据SDA，P1_2 输出
+  #define I2C_SDA_IN()            P1DIR &= ~0x04      // P1_2 = 数据SDA，P1_2 输入
 
-/*蜂鸣器端口宏定义*/
-#define BUZZER          P2_0
-#define BUZZER_IN()     P2DIR &= ~0x01
-#define BUZZER_OUT()    P2DIR |=  0x01
-#define BUZZER_IO()     P2SEL &= ~0x01              //普通IO口
-#define BUZZER_T4()     P2SEL |=  0x01              //T4用作PWM输出    
-#define BUZZER_T4ON()   T4CTL |=  0x10;             //启动定时器
-#define BUZZER_T4OFF()  T4CTL &= ~0x10;             //关闭定时器
-#define BUZZER_OFF()    BUZZER_IN();BUZZER_IO();BUZZER_T4OFF()
-#define BUZZER_ON()     BUZZER_OUT();BUZZER_T4();BUZZER_T4ON()
-
-
- 
 
 /* ------------------------------------------------------------------------------------------------
  *                                          Prototypes
  * ------------------------------------------------------------------------------------------------
  */
-void Buzzer_Init(void);
-void Buzzer_Timer4_Init(void);
+void I2C_Init(void);
+void I2C_Delay(uint8 n);
+void I2C_Start(void);
+void I2C_Stop(void);
+uint8 I2C_ReceiveAck(void);
+uint8 I2C_SendByte(uint8 I2C_Tx);
+uint8 I2C_ReceiveByte(void);
+void I2C_SendAck(uint8 I2C_AckFlag);
+
 
 /**************************************************************************************************
  */

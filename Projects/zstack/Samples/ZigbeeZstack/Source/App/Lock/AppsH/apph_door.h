@@ -1,39 +1,52 @@
-#ifndef DRI_BUZZER_H_
-#define DRI_BUZZER_H_
+#ifndef APPH_DOOR_H_
+#define APPH_DOOR_H_
+
 
 /* ------------------------------------------------------------------------------------------------
  *                                          Includes
  * ------------------------------------------------------------------------------------------------
  */
-#include<ioCC2530.h>
+
+/* 设备层 */
+#include "dev_buzzer.h"
+
+/* 驱动层 */
+#include "dri_motor.h"
+
+
 
 
 /* ------------------------------------------------------------------------------------------------
  *                                          Define
  * ------------------------------------------------------------------------------------------------
  */
-
-/*蜂鸣器端口宏定义*/
-#define BUZZER          P2_0
-#define BUZZER_IN()     P2DIR &= ~0x01
-#define BUZZER_OUT()    P2DIR |=  0x01
-#define BUZZER_IO()     P2SEL &= ~0x01              //普通IO口
-#define BUZZER_T4()     P2SEL |=  0x01              //T4用作PWM输出    
-#define BUZZER_T4ON()   T4CTL |=  0x10;             //启动定时器
-#define BUZZER_T4OFF()  T4CTL &= ~0x10;             //关闭定时器
-#define BUZZER_OFF()    BUZZER_IN();BUZZER_IO();BUZZER_T4OFF()
-#define BUZZER_ON()     BUZZER_OUT();BUZZER_T4();BUZZER_T4ON()
+#ifndef APPH_DOOR_C_
+  #define DOOR_C_Extern extern
+#else
+  #define DOOR_C_Extern
+#endif
 
 
- 
+/*门锁端口定义*/
+#define DOOR        P0_4  //检测门状态
+  #define PUSHIN    0     //锁扣向内压
+  #define PUSHOUT   1     //锁扣返回原状
+
+/* ------------------------------------------------------------------------------------------------
+ *                                          多文件全局变量 Door.c main.c
+ * ------------------------------------------------------------------------------------------------
+ */
+/*门锁状态标志*/ 
+DOOR_C_Extern uint8 DoorStatus;  
+
+
 
 /* ------------------------------------------------------------------------------------------------
  *                                          Prototypes
  * ------------------------------------------------------------------------------------------------
  */
-void Buzzer_Init(void);
-void Buzzer_Timer4_Init(void);
+void Door_Open(uint8 Led);
+void Door_Close(uint8 Led);
+void Door_Open_Close(void);
 
-/**************************************************************************************************
- */
 #endif

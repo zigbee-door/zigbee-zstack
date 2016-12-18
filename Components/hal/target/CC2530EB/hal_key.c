@@ -89,6 +89,8 @@
 #include "hal_key.h"
 #include "osal.h"
 
+#include "apph_door.h"
+
 #if (defined HAL_KEY) && (HAL_KEY == TRUE)
 
 /**************************************************************************************************
@@ -109,8 +111,10 @@
 #define HAL_KEY_CPU_PORT_0_IF P0IF
 #define HAL_KEY_CPU_PORT_2_IF P2IF
 
+
+/********************钥匙开门**********************/
+
 /* SW_6 is at P0.1 */
-/* SW_6是独立按键 位P0.1进行配置 */
 #define HAL_KEY_SW_6_PORT   P0
 #define HAL_KEY_SW_6_BIT    BV(1)
 #define HAL_KEY_SW_6_SEL    P0SEL
@@ -130,27 +134,49 @@
 #define HAL_KEY_SW_6_ICTLBIT  BV(1) /* P0IEN - P0.1 enable/disable bit */
 #define HAL_KEY_SW_6_PXIFG    P0IFG /* Interrupt flag at source */
 
+/********************锁扣，用于检测关门**********************/
+/* SW_7 设置为 P0.4 */
+#define HAL_KEY_SW_7_PORT   P0
+#define HAL_KEY_SW_7_BIT    BV(4)
+#define HAL_KEY_SW_7_SEL    P0SEL
+#define HAL_KEY_SW_7_DIR    P0DIR
+
+
+/* 中断触发方式配置 */
+#define HAL_KEY_SW_7_EDGEBIT  BV(0)
+#define HAL_KEY_SW_7_EDGE     HAL_KEY_FALLING_EDGE  //下降沿触发中断
+
+/* 按键中断寄存器 */
+#define HAL_KEY_SW_7_IEN      IEN1  /* CPU interrupt mask register */
+#define HAL_KEY_SW_7_IENBIT   BV(5) /* Mask bit for all of Port_0 */
+#define HAL_KEY_SW_7_ICTL     P0IEN /* Port Interrupt Control register */
+#define HAL_KEY_SW_7_ICTLBIT  BV(4) /* P0IEN - P0.4 enable/disable bit */
+#define HAL_KEY_SW_7_PXIFG    P0IFG /* Interrupt flag at source */
+
+
+
+/********************摇杆没用**********************/
 /* Joy stick move at P2.0 */
 /* 摇杆P2.0寄存器配置 */
-#define HAL_KEY_JOY_MOVE_PORT   P2
-#define HAL_KEY_JOY_MOVE_BIT    BV(0)
-#define HAL_KEY_JOY_MOVE_SEL    P2SEL
-#define HAL_KEY_JOY_MOVE_DIR    P2DIR
-
-/* edge interrupt */
-/* 中断触发方式 */
-#define HAL_KEY_JOY_MOVE_EDGEBIT  BV(3)
-#define HAL_KEY_JOY_MOVE_EDGE     HAL_KEY_FALLING_EDGE
-
-/* Joy move interrupts */
-/* 摇杆中断寄存器 */
-#define HAL_KEY_JOY_MOVE_IEN      IEN2  /* CPU interrupt mask register */
-#define HAL_KEY_JOY_MOVE_IENBIT   BV(1) /* Mask bit for all of Port_2 */
-#define HAL_KEY_JOY_MOVE_ICTL     P2IEN /* Port Interrupt Control register */
-#define HAL_KEY_JOY_MOVE_ICTLBIT  BV(0) /* P2IENL - P2.0<->P2.3 enable/disable bit */
-#define HAL_KEY_JOY_MOVE_PXIFG    P2IFG /* Interrupt flag at source */
-
-#define HAL_KEY_JOY_CHN   HAL_ADC_CHANNEL_6
+//#define HAL_KEY_JOY_MOVE_PORT   P2
+//#define HAL_KEY_JOY_MOVE_BIT    BV(0)
+//#define HAL_KEY_JOY_MOVE_SEL    P2SEL
+//#define HAL_KEY_JOY_MOVE_DIR    P2DIR
+//
+///* edge interrupt */
+///* 中断触发方式 */
+//#define HAL_KEY_JOY_MOVE_EDGEBIT  BV(3)
+//#define HAL_KEY_JOY_MOVE_EDGE     HAL_KEY_FALLING_EDGE
+//
+///* Joy move interrupts */
+///* 摇杆中断寄存器 */
+//#define HAL_KEY_JOY_MOVE_IEN      IEN2  /* CPU interrupt mask register */
+//#define HAL_KEY_JOY_MOVE_IENBIT   BV(1) /* Mask bit for all of Port_2 */
+//#define HAL_KEY_JOY_MOVE_ICTL     P2IEN /* Port Interrupt Control register */
+//#define HAL_KEY_JOY_MOVE_ICTLBIT  BV(0) /* P2IENL - P2.0<->P2.3 enable/disable bit */
+//#define HAL_KEY_JOY_MOVE_PXIFG    P2IFG /* Interrupt flag at source */
+//
+//#define HAL_KEY_JOY_CHN   HAL_ADC_CHANNEL_6
 
 
 /**************************************************************************************************
@@ -194,8 +220,13 @@ void HalKeyInit( void )
   /* 初始化按键为0 */
   halKeySavedKeys = 0;
 
+  /* 钥匙开门 */
   HAL_KEY_SW_6_SEL &= ~(HAL_KEY_SW_6_BIT);    /* 设置为GPIO口，Set pin function to GPIO */
   HAL_KEY_SW_6_DIR &= ~(HAL_KEY_SW_6_BIT);    /* 设置为输入模式，Set pin direction to Input */
+  
+  /* 锁扣 */
+  HAL_KEY_SW_7_SEL &= ~(HAL_KEY_SW_7_BIT);    /* 设置为GPIO口，Set pin function to GPIO */
+  HAL_KEY_SW_7_DIR &= ~(HAL_KEY_SW_7_BIT);    /* 设置为输入模式，Set pin direction to Input */
   
   
   
@@ -236,11 +267,22 @@ void HalKeyConfig (bool interruptEnable, halKeyCBack_t cback)
   if (Hal_KeyIntEnable)
   {
     /* Rising/Falling edge configuratinn */
-
+    
+    /* 钥匙开门 */
     PICTL &= ~(HAL_KEY_SW_6_EDGEBIT);    /* Clear the edge bit */
+    
+    /* 锁扣 */
+    PICTL &= ~(HAL_KEY_SW_7_EDGEBIT);    /* Clear the edge bit */
+    
+    
     /* For falling edge, the bit must be set. */
+    
   #if (HAL_KEY_SW_6_EDGE == HAL_KEY_FALLING_EDGE)
-    PICTL |= HAL_KEY_SW_6_EDGEBIT;
+    PICTL |= HAL_KEY_SW_6_EDGEBIT;    //钥匙
+  #endif
+    
+  #if (HAL_KEY_SW_7_EDGE == HAL_KEY_FALLING_EDGE)
+    PICTL |= HAL_KEY_SW_7_EDGEBIT;    //锁扣
   #endif
 
 
@@ -249,19 +291,26 @@ void HalKeyConfig (bool interruptEnable, halKeyCBack_t cback)
      * - Enable CPU interrupt
      * - Clear any pending interrupt
      */
+    
+     /* 钥匙开门 */
     HAL_KEY_SW_6_ICTL |= HAL_KEY_SW_6_ICTLBIT;
     HAL_KEY_SW_6_IEN |= HAL_KEY_SW_6_IENBIT;
     HAL_KEY_SW_6_PXIFG = ~(HAL_KEY_SW_6_BIT);
 
-
+    /* 锁扣 */
+    HAL_KEY_SW_7_ICTL |= HAL_KEY_SW_7_ICTLBIT;
+    HAL_KEY_SW_7_IEN |= HAL_KEY_SW_7_IENBIT;
+    HAL_KEY_SW_7_PXIFG = ~(HAL_KEY_SW_7_BIT);
+    
+    
 
     /* Rising/Falling edge configuratinn */
 
-    HAL_KEY_JOY_MOVE_ICTL &= ~(HAL_KEY_JOY_MOVE_EDGEBIT);    /* Clear the edge bit */
-    /* For falling edge, the bit must be set. */
-  #if (HAL_KEY_JOY_MOVE_EDGE == HAL_KEY_FALLING_EDGE)
-    HAL_KEY_JOY_MOVE_ICTL |= HAL_KEY_JOY_MOVE_EDGEBIT;
-  #endif
+//    HAL_KEY_JOY_MOVE_ICTL &= ~(HAL_KEY_JOY_MOVE_EDGEBIT);    /* Clear the edge bit */
+//    /* For falling edge, the bit must be set. */
+//  #if (HAL_KEY_JOY_MOVE_EDGE == HAL_KEY_FALLING_EDGE)
+//    HAL_KEY_JOY_MOVE_ICTL |= HAL_KEY_JOY_MOVE_EDGEBIT;
+//  #endif
 
 
     /* Interrupt configuration:
@@ -269,9 +318,9 @@ void HalKeyConfig (bool interruptEnable, halKeyCBack_t cback)
      * - Enable CPU interrupt
      * - Clear any pending interrupt
      */
-    HAL_KEY_JOY_MOVE_ICTL |= HAL_KEY_JOY_MOVE_ICTLBIT;
-    HAL_KEY_JOY_MOVE_IEN |= HAL_KEY_JOY_MOVE_IENBIT;
-    HAL_KEY_JOY_MOVE_PXIFG = ~(HAL_KEY_JOY_MOVE_BIT);
+//    HAL_KEY_JOY_MOVE_ICTL |= HAL_KEY_JOY_MOVE_ICTLBIT;
+//    HAL_KEY_JOY_MOVE_IEN |= HAL_KEY_JOY_MOVE_IENBIT;
+//    HAL_KEY_JOY_MOVE_PXIFG = ~(HAL_KEY_JOY_MOVE_BIT);
 
 
     /* Do this only after the hal_key is configured - to work with sleep stuff */
@@ -282,8 +331,15 @@ void HalKeyConfig (bool interruptEnable, halKeyCBack_t cback)
   }
   else    /* Interrupts NOT enabled */
   {
+    
+     /* 钥匙开门 */
     HAL_KEY_SW_6_ICTL &= ~(HAL_KEY_SW_6_ICTLBIT); /* don't generate interrupt */
     HAL_KEY_SW_6_IEN &= ~(HAL_KEY_SW_6_IENBIT);   /* Clear interrupt enable bit */
+    
+    /* 锁扣 */
+    HAL_KEY_SW_7_ICTL &= ~(HAL_KEY_SW_7_ICTLBIT); /* don't generate interrupt */
+    HAL_KEY_SW_7_IEN &= ~(HAL_KEY_SW_7_IENBIT);   /* Clear interrupt enable bit */
+    
 
     osal_start_timerEx (Hal_TaskID, HAL_KEY_EVENT, HAL_KEY_POLLING_VALUE);    /* Kick off polling */
   }
@@ -306,9 +362,16 @@ uint8 HalKeyRead ( void )
 {
   uint8 keys = 0;
 
+   /* 钥匙开门 */
   if (HAL_PUSH_BUTTON1())
   {
     keys |= HAL_KEY_SW_6;
+  }
+  
+  /* 锁扣 */
+  if (HAL_PUSH_BUTTON2())
+  {
+    keys |= HAL_KEY_SW_7;
   }
 
 /*  if ((HAL_KEY_JOY_MOVE_PORT & HAL_KEY_JOY_MOVE_BIT))  // Key is active low 
@@ -338,14 +401,16 @@ void HalKeyPoll (void)
     keys = halGetJoyKeyInput();
   }
 */
-  if (!HAL_PUSH_BUTTON2())//S0
-  {
-    keys |= HAL_KEY_SW_1; 
-  }
-  if (!HAL_PUSH_BUTTON1())//S1 
+  if (!HAL_PUSH_BUTTON1())//钥匙开门
   {
     keys |= HAL_KEY_SW_6; 
   }
+  
+  if (!HAL_PUSH_BUTTON2())//锁扣 
+  {
+    keys |= HAL_KEY_SW_7; 
+  }
+  
   
   if (!Hal_KeyIntEnable)
   {
@@ -392,7 +457,7 @@ uint8 halGetJoyKeyInput(void)
   {
     ksave1 = ksave0;    /* save previouse key reading */
 
-    adc = HalAdcRead (HAL_KEY_JOY_CHN, HAL_ADC_RESOLUTION_8);
+//    adc = HalAdcRead (HAL_KEY_JOY_CHN, HAL_ADC_RESOLUTION_8);
 
     if ((adc >= 2) && (adc <= 38))
     {
@@ -437,17 +502,25 @@ void halProcessKeyInterrupt (void)
 {
   bool valid=FALSE;
 
+  /* 钥匙开门 */
   if (HAL_KEY_SW_6_PXIFG & HAL_KEY_SW_6_BIT)  /* Interrupt Flag has been set */
   {
     HAL_KEY_SW_6_PXIFG = ~(HAL_KEY_SW_6_BIT); /* Clear Interrupt Flag */
     valid = TRUE;
   }
-
-  if (HAL_KEY_JOY_MOVE_PXIFG & HAL_KEY_JOY_MOVE_BIT)  /* Interrupt Flag has been set */
+  
+  /* 锁扣 */
+  if (HAL_KEY_SW_7_PXIFG & HAL_KEY_SW_7_BIT)  /* Interrupt Flag has been set */
   {
-    HAL_KEY_JOY_MOVE_PXIFG = ~(HAL_KEY_JOY_MOVE_BIT); /* Clear Interrupt Flag */
+    HAL_KEY_SW_7_PXIFG = ~(HAL_KEY_SW_7_BIT); /* Clear Interrupt Flag */
     valid = TRUE;
   }
+
+//  if (HAL_KEY_JOY_MOVE_PXIFG & HAL_KEY_JOY_MOVE_BIT)  /* Interrupt Flag has been set */
+//  {
+//    HAL_KEY_JOY_MOVE_PXIFG = ~(HAL_KEY_JOY_MOVE_BIT); /* Clear Interrupt Flag */
+//    valid = TRUE;
+//  }
 
   if (valid)
   {
@@ -498,16 +571,30 @@ uint8 HalKeyExitSleep ( void )
  **************************************************************************************************/
 HAL_ISR_FUNCTION( halKeyPort0Isr, P0INT_VECTOR )
 {
+  
+  /* 钥匙开门 */
   if (HAL_KEY_SW_6_PXIFG & HAL_KEY_SW_6_BIT)
   {
     halProcessKeyInterrupt();
   }
 
+  /* 锁扣 */
+  if (HAL_KEY_SW_7_PXIFG & HAL_KEY_SW_7_BIT)
+  {
+    if(DOOR == PUSHIN)               //如果锁扣向内压 
+    {
+      DoorStatus =  PUSHIN;          //在中断里置位
+    }
+  
+    halProcessKeyInterrupt();
+  }
+  
   /*
     Clear the CPU interrupt flag for Port_0
     PxIFG has to be cleared before PxIF
   */
   HAL_KEY_SW_6_PXIFG = 0;
+  HAL_KEY_SW_7_PXIFG = 0;
   HAL_KEY_CPU_PORT_0_IF = 0;
 }
 
@@ -523,18 +610,18 @@ HAL_ISR_FUNCTION( halKeyPort0Isr, P0INT_VECTOR )
  **************************************************************************************************/
 HAL_ISR_FUNCTION( halKeyPort2Isr, P2INT_VECTOR )
 {
-  if (HAL_KEY_JOY_MOVE_PXIFG & HAL_KEY_JOY_MOVE_BIT)
-  {
-    halProcessKeyInterrupt();
-  }
-
-  /*
-    Clear the CPU interrupt flag for Port_2
-    PxIFG has to be cleared before PxIF
-    Notes: P2_1 and P2_2 are debug lines.
-  */
-  HAL_KEY_JOY_MOVE_PXIFG = 0;
-  HAL_KEY_CPU_PORT_2_IF = 0;
+//  if (HAL_KEY_JOY_MOVE_PXIFG & HAL_KEY_JOY_MOVE_BIT)
+//  {
+//    halProcessKeyInterrupt();
+//  }
+//
+//  /*
+//    Clear the CPU interrupt flag for Port_2
+//    PxIFG has to be cleared before PxIF
+//    Notes: P2_1 and P2_2 are debug lines.
+//  */
+//  HAL_KEY_JOY_MOVE_PXIFG = 0;
+//  HAL_KEY_CPU_PORT_2_IF = 0;
 }
 
 #else

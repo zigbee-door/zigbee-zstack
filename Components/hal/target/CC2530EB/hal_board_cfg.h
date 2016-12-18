@@ -147,7 +147,7 @@
 #define ACTIVE_LOW        !
 #define ACTIVE_HIGH       !!    /* double negation forces result to be '1' */
 
-/* S1 */
+/* 门锁按键 */
 #define PUSH1_BV          BV(1)
 #define PUSH1_SBIT        P0_1
 
@@ -159,9 +159,9 @@
   #error Unknown Board Indentifier
 #endif
 
-/* Joystick Center Press */
-#define PUSH2_BV          BV(0)
-#define PUSH2_SBIT        P2_0
+/* 锁扣 */
+#define PUSH2_BV          BV(4)
+#define PUSH2_SBIT        P0_4
 #define PUSH2_POLARITY    ACTIVE_HIGH
 
 /* ------------------------------------------------------------------------------------------------
@@ -246,8 +246,8 @@ extern void MAC_RfFrontendSetup(void);
   LED2_DDR |= LED2_BV;                                           \
   LED3_DDR |= LED3_BV;                                           \
                                                                  \
-  /* configure tristates */                                      \
-  P0INP |= PUSH2_BV;                                             \
+  /* 默认设置为三态：P0INP |= PUSH2_BV，这里设置P0.1 0.4 0.5为高电平 */                                      \
+  P0INP &= ~0x32;                                             \
 }
 
 #elif defined (HAL_BOARD_CC2530EB_REV13) || defined (HAL_PA_LNA) || defined (HAL_PA_LNA_CC2590)
@@ -274,7 +274,7 @@ extern void MAC_RfFrontendSetup(void);
   P0DIR |= BV(7);                                                \
                                                                  \
   /* configure tristates */                                      \
-  P0INP |= PUSH2_BV;                                             \
+  P0INP &= ~0x32;                                             \
                                                                  \
   /* setup RF frontend if necessary */                           \
   HAL_BOARD_RF_FRONTEND_SETUP();                                 \

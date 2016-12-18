@@ -37,23 +37,23 @@
  *                                          Prototype
  * ------------------------------------------------------------------------------------------------
  */
-void Dev_Buzzer_System_Start(void);
+void Buzzer_System_Start(void);
 
-void Dev_Buzzer_One_Buzzer(void);
-void Dev_Buzzer_OneBuzzer_Led(uint8 Led);
-void Dev_Buzzer_Two_Buzzer(void);
-void Dev_Buzzer_Three_Buzzer(void);
+void Buzzer_One(void);
+void Buzzer_One_Led(uint8 Led);
+void Buzzer_Two(void);
+void Buzzer_Three(void);
 
-void Dev_Buzzer_Door_Open(void);
-void Dev_Buzzer_Door_Close(void);
-void Dev_Buzzer_Door_Lock(void);
-void Dev_Buzzer_Key_Open(void);
-void Dev_Buzzer_Key_Close(void);
+void Buzzer_Door_Open(void);
+void Buzzer_Door_Close(void);
+void Buzzer_Door_Lock(void);
+void Buzzer_Key_Open(void);
+void Buzzer_Key_Close(void);
 
-void Dev_Buzzer_Card_Full(void);
-void Dev_Buzzer_Card_Success(void);
-void Dev_Buzzer_Card_Fail(void);
-void Dev_Buzzer_Door_Init(void);
+void Buzzer_Card_Full(void);
+void Buzzer_Card_Success(void);
+void Buzzer_Card_Fail(void);
+void Buzzer_Door_Init(void);
 
 
 #endif

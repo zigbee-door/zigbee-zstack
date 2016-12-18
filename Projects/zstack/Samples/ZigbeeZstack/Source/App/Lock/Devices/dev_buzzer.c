@@ -1,4 +1,4 @@
-#define DEV_DRI_BUZZER_C_
+#define DEV_BUZZER_C_
 
 
 /* ------------------------------------------------------------------------------------------------
@@ -14,20 +14,20 @@
  * ------------------------------------------------------------------------------------------------
  */
 /****************************************
- * @fn          Dev_Buzzer_System_Start
+ * @fn          Buzzer_System_Start
  * @brief       系统启动提示声
  * @param       无
  * @return      无
  ****************************************
  */
-void Dev_Buzzer_System_Start(void)
+void Buzzer_System_Start(void)
 {
   LED_ON();
-  DRI_BUZZER_ON();
+  BUZZER_ON();
   T4CC0   = GamutF;     
-  Dri_DelayMs(100);
+  Delay_Ms(100);
   LED_OFF();
-  DRI_BUZZER_OFF();
+  BUZZER_OFF();
 }
 
 /* ------------------------------------------------------------------------------------------------
@@ -35,31 +35,31 @@ void Dev_Buzzer_System_Start(void)
  * ------------------------------------------------------------------------------------------------
  */
 /**************************************
- * @fn          Dev_Buzzer_One_Buzzer
+ * @fn          Buzzer_One
  * @brief       普通提示声一声
  * @param       无
  * @return      无
  **************************************
  */
-void Dev_Buzzer_One_Buzzer(void)
+void Buzzer_One(void)
 {
   LED_ON();
-  DRI_BUZZER_ON();
+  BUZZER_ON();
   T4CC0   = GamutB;     
-  Dri_DelayMs(100);
+  Delay_Ms(100);
   LED_OFF();
-  DRI_BUZZER_OFF();
-  Dri_DelayMs(100);
+  BUZZER_OFF();
+  Delay_Ms(100);
 }
 
 /***************************************
- * @fn          Dev_Buzzer_OneBuzzer_Led
+ * @fn          Buzzer_One_Led
  * @brief       普通提示声一声
  * @param       无
  * @return      无
  ***************************************
  */
-void Dev_Buzzer_OneBuzzer_Led(uint8 Led)
+void Buzzer_One_Led(uint8 Led)
 {
   if(Led == LedOn)
   {
@@ -71,39 +71,39 @@ void Dev_Buzzer_OneBuzzer_Led(uint8 Led)
     LED_OFF();
   }
   
-  DRI_BUZZER_ON();
+  BUZZER_ON();
   T4CC0   = GamutB;     
-  Dri_DelayMs(100);
-  DRI_BUZZER_OFF();
-  Dri_DelayMs(100);
+  Delay_Ms(100);
+  BUZZER_OFF();
+  Delay_Ms(100);
   
 }
 
 /***************************************
- * @fn          Dev_Buzzer_Two_Buzzer
+ * @fn          Buzzer_Two
  * @brief       普通提示声两声
  * @param       无
  * @return      无
  ***************************************
  */
-void Dev_Buzzer_Two_Buzzer(void)
+void Buzzer_Two(void)
 {
-  Dev_Buzzer_One_Buzzer();
-  Dev_Buzzer_One_Buzzer();
+  Buzzer_One();
+  Buzzer_One();
 }
 
 /***************************************
- * @fn          Dev_Buzzer_Three_Buzzer
+ * @fn          Buzzer_Three
  * @brief       普通提示声三声
  * @param       无
  * @return      无
  ***************************************
  */
-void Dev_Buzzer_Three_Buzzer(void)
+void Buzzer_Three(void)
 {
-  Dev_Buzzer_One_Buzzer();
-  Dev_Buzzer_One_Buzzer();
-  Dev_Buzzer_One_Buzzer();
+  Buzzer_One();
+  Buzzer_One();
+  Buzzer_One();
 }
 
 /* ------------------------------------------------------------------------------------------------
@@ -111,112 +111,112 @@ void Dev_Buzzer_Three_Buzzer(void)
  * ------------------------------------------------------------------------------------------------
  */
 /****************************************
- * @fn          Dev_Buzzer_Door_Open
+ * @fn          Buzzer_Door_Open
  * @brief       开门提示声
  * @param       无
  * @return      无
  ****************************************
  */
-void Dev_Buzzer_Door_Open(void)
+void Buzzer_Door_Open(void)
 {
   
   T4CC0   = GamutC; 
-  DRI_BUZZER_ON();       
-  Dri_DelayMs(100);
-  Dri_DelayMs(100);
-  DRI_BUZZER_OFF();
+  BUZZER_ON();       
+  Delay_Ms(100);
+  Delay_Ms(100);
+  BUZZER_OFF();
        
   T4CC0   = GamutDp;    
-  DRI_BUZZER_ON();   
-  Dri_DelayMs(100);
-  Dri_DelayMs(100);
-  DRI_BUZZER_OFF();
+  BUZZER_ON();   
+  Delay_Ms(100);
+  Delay_Ms(100);
+  BUZZER_OFF();
       
   T4CC0   = GamutG;    
-  DRI_BUZZER_ON();   
-  Dri_DelayMs(100);
-  Dri_DelayMs(100);
-  DRI_BUZZER_OFF();
+  BUZZER_ON();   
+  Delay_Ms(100);
+  Delay_Ms(100);
+  BUZZER_OFF();
 }
 
 
 /****************************************
- * @fn          Dev_Buzzer_Door_Close
+ * @fn          Buzzer_Door_Close
  * @brief       关门提示声
  * @param       无
  * @return      无
  ****************************************
  */
-void Dev_Buzzer_Door_Close(void)
+void Buzzer_Door_Close(void)
 {       
   T4CC0   = GamutG;   
-  DRI_BUZZER_ON();
-  Dri_DelayMs(100);
-  Dri_DelayMs(100);
-  DRI_BUZZER_OFF();
+  BUZZER_ON();
+  Delay_Ms(100);
+  Delay_Ms(100);
+  BUZZER_OFF();
   
       
   T4CC0   = GamutDp;        
-  DRI_BUZZER_ON();  
-  Dri_DelayMs(100);
-  Dri_DelayMs(100);
-  DRI_BUZZER_OFF();
+  BUZZER_ON();  
+  Delay_Ms(100);
+  Delay_Ms(100);
+  BUZZER_OFF();
   
   
   T4CC0   = GamutC; 
-  DRI_BUZZER_ON();
-  Dri_DelayMs(100);
-  Dri_DelayMs(100);
-  DRI_BUZZER_OFF();
+  BUZZER_ON();
+  Delay_Ms(100);
+  Delay_Ms(100);
+  BUZZER_OFF();
 }
 
 
 /****************************************
- * @fn          Dev_Buzzer_Door_Lock
+ * @fn          Buzzer_Door_Lock
  * @brief       门反锁LED提示
  * @param       无
  * @return      无
  ****************************************
  */
-void Dev_Buzzer_Door_Lock(void)
+void Buzzer_Door_Lock(void)
 {
   LED_ON();
-  Dri_DelayMs(100);
+  Delay_Ms(100);
   LED_OFF();
-  Dri_DelayMs(100);
+  Delay_Ms(100);
   LED_ON();
-  Dri_DelayMs(100);
+  Delay_Ms(100);
   LED_OFF();
-  Dri_DelayMs(100);
+  Delay_Ms(100);
   LED_ON();
-  Dri_DelayMs(100);
+  Delay_Ms(100);
   LED_OFF();
-  Dri_DelayMs(100);
+  Delay_Ms(100);
 }
 
 /****************************************
- * @fn          Dev_Buzzer_Key_Open
+ * @fn          Buzzer_Key_Open
  * @brief       钥匙开门提示
  * @param       无
  * @return      无
  ****************************************
  */
-void Dev_Buzzer_Key_Open(void)
+void Buzzer_Key_Open(void)
 {
   LED_ON();
   T4CC0   = GamutB; 
-  DRI_BUZZER_ON();       
-  Dri_DelayMs(100);
-  Dri_DelayMs(100);
-  Dri_DelayMs(100);
-  DRI_BUZZER_OFF();
+  BUZZER_ON();       
+  Delay_Ms(100);
+  Delay_Ms(100);
+  Delay_Ms(100);
+  BUZZER_OFF();
        
   T4CC0   = GamutC;    
-  DRI_BUZZER_ON();   
-  Dri_DelayMs(100);
-  Dri_DelayMs(100);
-  Dri_DelayMs(100);
-  DRI_BUZZER_OFF();
+  BUZZER_ON();   
+  Delay_Ms(100);
+  Delay_Ms(100);
+  Delay_Ms(100);
+  BUZZER_OFF();
   LED_OFF();
   
   
@@ -228,108 +228,108 @@ void Dev_Buzzer_Key_Open(void)
  * ------------------------------------------------------------------------------------------------
  */
 /****************************************
- * @fn          Dev_Buzzer_Card_Full
+ * @fn          Buzzer_Card_Full
  * @brief       普通卡列表已满
  * @param       无
  * @return      无
  ****************************************
  */
-void Dev_Buzzer_Card_Full(void)
+void Buzzer_Card_Full(void)
 {
   LED_OFF();
   T4CC0   = GamutB;   
-  DRI_BUZZER_ON();
-  Dri_DelayMs(100);
-  Dri_DelayMs(100);
-  DRI_BUZZER_OFF();
+  BUZZER_ON();
+  Delay_Ms(100);
+  Delay_Ms(100);
+  BUZZER_OFF();
   
       
   T4CC0   = GamutC;        
-  DRI_BUZZER_ON();  
-  Dri_DelayMs(100);
-  Dri_DelayMs(100);
-  DRI_BUZZER_OFF();
+  BUZZER_ON();  
+  Delay_Ms(100);
+  Delay_Ms(100);
+  BUZZER_OFF();
   LED_ON();
 }
 
 /****************************************
- * @fn          Dev_Buzzer_Card_Success
+ * @fn          Buzzer_Card_Success
  * @brief       普通卡列表授权删权成功
  * @param       无
  * @return      无
  ****************************************
  */
-void Dev_Buzzer_Card_Success(void)
+void Buzzer_Card_Success(void)
 {
   LED_OFF();
-  DRI_BUZZER_ON();
+  BUZZER_ON();
   T4CC0   = GamutC;     
-  Dri_DelayMs(100);
-  DRI_BUZZER_OFF();
-  Dri_DelayMs(100);
-  DRI_BUZZER_ON();
+  Delay_Ms(100);
+  BUZZER_OFF();
+  Delay_Ms(100);
+  BUZZER_ON();
   T4CC0   = GamutB;     
-  Dri_DelayMs(100);
-  DRI_BUZZER_OFF();
+  Delay_Ms(100);
+  BUZZER_OFF();
   LED_ON();
 }
 
 /****************************************
- * @fn          Dev_Buzzer_Card_Fail
+ * @fn          Buzzer_Card_Fail
  * @brief       普通卡列表授权删权失败
  * @param       无
  * @return      无
  ****************************************
  */
-void Dev_Buzzer_Card_Fail(void)
+void Buzzer_Card_Fail(void)
 {
-  Dev_Buzzer_One_Buzzer();
-  Dev_Buzzer_One_Buzzer();
+  Buzzer_One();
+  Buzzer_One();
 }
 
 
 
 /**************************************************************************************************
- * @fn          Dev_Buzzer_Door_Init
+ * @fn          Buzzer_Door_Init
  * @brief       门锁初始化提示
  * @param       无
  * @return      无
  **************************************************************************************************
  */
-void Dev_Buzzer_Door_Init(void)
+void Buzzer_Door_Init(void)
 {
   T4CC0   = GamutB;   
-  DRI_BUZZER_ON();
-  Dri_DelayMs(100);
-  DRI_BUZZER_OFF();
+  BUZZER_ON();
+  Delay_Ms(100);
+  BUZZER_OFF();
   
       
   T4CC0   = GamutG;        
-  DRI_BUZZER_ON();  
-  Dri_DelayMs(100);
-  DRI_BUZZER_OFF();
+  BUZZER_ON();  
+  Delay_Ms(100);
+  BUZZER_OFF();
   
   
   T4CC0   = GamutE; 
-  DRI_BUZZER_ON();
-  Dri_DelayMs(100);
-  DRI_BUZZER_OFF();
+  BUZZER_ON();
+  Delay_Ms(100);
+  BUZZER_OFF();
   
   
   T4CC0   = GamutA;   
-  DRI_BUZZER_ON();
-  Dri_DelayMs(100);
-  DRI_BUZZER_OFF();
+  BUZZER_ON();
+  Delay_Ms(100);
+  BUZZER_OFF();
   
       
   T4CC0   = GamutF;        
-  DRI_BUZZER_ON();  
-  Dri_DelayMs(100);
-  DRI_BUZZER_OFF();
+  BUZZER_ON();  
+  Delay_Ms(100);
+  BUZZER_OFF();
   
   
   T4CC0   = GamutDp; 
-  DRI_BUZZER_ON();
-  Dri_DelayMs(100);
-  DRI_BUZZER_OFF();
+  BUZZER_ON();
+  Delay_Ms(100);
+  BUZZER_OFF();
 }

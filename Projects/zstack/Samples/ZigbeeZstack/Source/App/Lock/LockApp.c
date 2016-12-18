@@ -9,8 +9,11 @@
 
 /**************************************************************************************************
   Description:    端口配置说明
-  1.LED                     ->     P1_5  设置为输出
-  2.钥匙开门(其实就是按键)  ->     P0_1  设置为输入，上升沿触发中断 
+  1.LED                     ->              P1_5      设置为输出
+  2.KEY                     ->   钥匙开门   P0_1      设置为输入，上拉，下降沿触发中断 
+                                 锁扣       P0_4      设置为输入，上拉，下降沿触发中断
+  3.MOTOR                   ->   H桥上桥    P0_6 P0_7 设置为输出，低电平有效
+                                 H桥下桥    P1_0 P1_1 设置为出书，高电平有效
 
 
 **************************************************************************************************/
@@ -37,13 +40,18 @@
 #include "MT_APP.h"
 #include "MT.h"
 
-/* 门锁的硬件驱动 */
+/* 驱动层 */
 #include "dri_buzzer.h"   //蜂鸣器驱动
 #include "dri_delay.h"    //延时函数
+#include "dri_motor.h"    //电机驱动
 
-
-/* 门锁的设备应用 */  
+/* 设备层 */  
 #include "dev_buzzer.h"   //蜂鸣器应用
+
+/* 应用层 */
+#include "appl_data.h"    //EEPROM存储应用
+#include "apph_door.h"    //蜂鸣器应用
+
 
 /*********************************************************************
  * 全局变量
@@ -118,9 +126,15 @@ void LockApp_Init( uint8 task_id )
   LockApp_NwkState = DEV_INIT;      //网络状态初始化为DEV_INIT
   LockApp_TransID = 0;              //传输序列ID  
   
-  /*应用驱动初始化*/
-  Dri_Buzzer_Init();                //P2_0 蜂鸣器驱动初始化
-  Dri_Buzzer_Timer4_Init();         //定时器4初始化(覆盖了Z-STACK的配置)
+  /*Drivers驱动初始化*/
+  Buzzer_Init();                    //P2_0 蜂鸣器驱动初始化
+  Buzzer_Timer4_Init();             //定时器4初始化(覆盖了Z-STACK的配置)
+  Motor_Init();                     //P0_6 P0_7 P1_0 P1_1 电机驱动初始化
+  I2C_Init();                       //P1_2 P1_3 I2C初始化
+  
+  /*AppsL应用初始化*/
+  Data_DoorID_Init();               //门锁ID信息初始化，测试用
+  
   
   /*单播设置*/  
   LockApp_Periodic_DstAddr.addrMode = (afAddrMode_t)Addr16Bit;      //15:广播
@@ -208,7 +222,7 @@ uint16 LockApp_ProcessEvent( uint8 task_id, uint16 events )
   if ( events & LOCKAPP_OFF_LINE_TASK_MSG_EVENT )
   {
   
-   
+//    Door_Open_Close();
    
     osal_start_timerEx( LockApp_TaskID, LOCKAPP_OFF_LINE_TASK_MSG_EVENT,  
         (LOCKAPP_OFF_LINE_TASK_MSG_TIMEOUT + (osal_rand() & 0x00FF)) );
@@ -221,42 +235,31 @@ uint16 LockApp_ProcessEvent( uint8 task_id, uint16 events )
 }
 
 /*********************************************************************
- * Event Generation Functions
+ * 普通事件函数
  */
-/*********************************************************************
- * @fn      LockApp_HandleKeys
- *
- * @brief   Handles all key events for this device.
- *
- * @param   shift - true if in shift/alt.
- * @param   keys - bit field for key events. Valid entries:
- *                 HAL_KEY_SW_2
- *                 HAL_KEY_SW_1
- *
- * @return  none
- */
+
+/*********************************
+  Funcname:       LockApp_HandleKeys
+  Description:    按键处理事件
+  Author:         zhuxiankang
+  parm:           keys -> 按键
+*********************************/
+
 void LockApp_HandleKeys( uint8 shift, uint8 keys )
 {
   (void)shift;  // Intentionally unreferenced parameter
   
-//  if ( keys & HAL_KEY_SW_1 )
-//  {
-//    /* This key sends the Flash Command is sent to Group 1.
-//     * This device will not receive the Flash Command from this
-//     * device (even if it belongs to group 1).
-//     */
-//    LockApp_SendFlashMessage( LOCKAPP_FLASH_DURATION );
-//  }
-//  
-//  if ( keys & HAL_KEY_SW_2 )
-//  {
-//   
-//  }
-  
   /* 钥匙开门 */
   if ( keys & HAL_KEY_SW_6 ) {
-//    HalLedBlink(HAL_LED_1,3,50,500);      //LED灯间隔500ms闪烁3次
-    Dev_Buzzer_Key_Open();
+    Buzzer_Key_Open();
+    Door_Open(LedOn);
+    Delay_Ms(1000);
+    Door_Close(LedOff);
+  }
+  
+  /* 锁扣开门 */
+  if ( keys & HAL_KEY_SW_7 ) {
+    //IsDoorClose =  CLOSE_YES;
   }
 }
 

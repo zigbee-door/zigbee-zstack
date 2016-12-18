@@ -11,29 +11,29 @@
 
 
 /**************************************************************************************************
- * @fn          Dri_DelayMs
+ * @fn          Delay_Ms
  * @brief       延时ms函数
  * @param       timeout -> 延时ms数,非精确延时
  * @return      无
  **************************************************************************************************
  */
-void Dri_DelayMs( uint16 timeout )
+void Delay_Ms( uint16 timeout )
 {
    while(timeout--)
    { 
-      Dri_DelayUs(1080);     //等待1ms                          
+      Delay_Us(1080);     //等待1ms                          
    }
 }
 
 
 /**************************************************************************************************
- * @fn          Dri_DelayUs
+ * @fn          Delay_Us
  * @brief       延时us函数
  * @param       timeout -> 延时us数
  * @return      无
  **************************************************************************************************
  */
-void Dri_DelayUs( uint16 timeout )
+void Delay_Us( uint16 timeout )
 {
   while (timeout--)
   {

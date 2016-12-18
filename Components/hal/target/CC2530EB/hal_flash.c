@@ -22,7 +22,7 @@
   its documentation for any purpose.
 
   YOU FURTHER ACKNOWLEDGE AND AGREE THAT THE SOFTWARE AND DOCUMENTATION ARE
-  PROVIDED “AS IS” WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+  PROVIDED “AS IS?WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
   INCLUDING WITHOUT LIMITATION, ANY WARRANTY OF MERCHANTABILITY, TITLE,
   NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL
   TEXAS INSTRUMENTS OR ITS LICENSORS BE LIABLE OR OBLIGATED UNDER CONTRACT,
@@ -110,7 +110,7 @@ static __no_init uint8 ramCode[SIZE_OF_RAM_CODE];
 #if defined HAL_OAD_BOOT_CODE
 static void HalFlashWriteTrigger(void);
 #else
-static __monitor void HalFlashWriteTrigger(void);
+//static __monitor void HalFlashWriteTrigger(void);
 #endif
 
 /**************************************************************************************************
@@ -226,7 +226,7 @@ void HalFlashWrite(uint16 addr, uint8 *buf, uint16 cnt)
 
   FADDRL = (uint8)addr;
   FADDRH = (uint8)(addr >> 8);
-  HalFlashWriteTrigger();
+//  HalFlashWriteTrigger();
 }
 
 /**************************************************************************************************
@@ -268,18 +268,18 @@ void HalFlashErase(uint8 pg)
  * @return      None.
  **************************************************************************************************
  */
-#if defined HAL_OAD_BOOT_CODE
-#pragma optimize=medium
-static void HalFlashWriteTrigger(void)
-#else
-static __monitor void HalFlashWriteTrigger(void)
-#endif
-{
-  MEMCTR |= 0x08;       // Start the Memory Arbiter running CODE from RAM.
-  FCTL |= 0x02;         // Trigger the DMA writes.
-  while (FCTL & 0x80);  // Wait until writing is done.
-  MEMCTR &= ~0x08;      // Stop the Memory Arbiter.
-}
+//#if defined HAL_OAD_BOOT_CODE
+//#pragma optimize=medium
+//static void HalFlashWriteTrigger(void)
+//#else
+//static __monitor void HalFlashWriteTrigger(void)
+//#endif
+//{
+//  MEMCTR |= 0x08;       // Start the Memory Arbiter running CODE from RAM.
+//  FCTL |= 0x02;         // Trigger the DMA writes.
+//  while (FCTL & 0x80);  // Wait until writing is done.
+//  MEMCTR &= ~0x08;      // Stop the Memory Arbiter.
+//}
 
 /**************************************************************************************************
 */
