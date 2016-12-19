@@ -9,11 +9,24 @@
 
 /**************************************************************************************************
   Description:    端口配置说明
-  1.LED                     ->              P1_5      设置为输出
-  2.KEY                     ->   钥匙开门   P0_1      设置为输入，上拉，下降沿触发中断 
-                                 锁扣       P0_4      设置为输入，上拉，下降沿触发中断
-  3.MOTOR                   ->   H桥上桥    P0_6 P0_7 设置为输出，低电平有效
-                                 H桥下桥    P1_0 P1_1 设置为出书，高电平有效
+  1.LED                     ->              P1_5      普通IO口，设置为输出
+
+  2.KEY                     ->   钥匙开门   P0_1      普通IO口，设置为上拉、输入，下降沿触发中断 
+                                 锁扣       P0_4      普通IO口，设置为上拉、输入，下降沿触发中断
+
+  3.BUZZER                  ->   蜂鸣器     P2_0      普通IO口，设置为上拉、输出，默认高电平   
+
+  4.MOTOR                   ->   H桥上桥    P0_6 P0_7 普通IO口，设置为输出，低电平有效
+                                 H桥下桥    P1_0 P1_1 普通IO口，设置为输出，高电平有效
+
+  5.I2C                     ->   SCL        P1_3      普通IO口，设置为输出
+                                 SDA        P1_2      普通IO口，可能输出也可能输出
+ 
+  6.MFRC522                 ->   CS(SPI)    P1_2      普通IO口，设置为输出
+                                 SCK(SPI)   P1_3      普通IO口，设置为输出
+                                 MOSI(SPI)  P0_2      普通IO口，设置为输出
+                                 MISO(SPI)  P0_3      普通IO口，设置为输入
+                                 RST        P1_7      普通IO口，设置为输出
 
 
 **************************************************************************************************/
@@ -40,17 +53,13 @@
 #include "MT_APP.h"
 #include "MT.h"
 
-/* 驱动层 */
-#include "dri_buzzer.h"   //蜂鸣器驱动
-#include "dri_delay.h"    //延时函数
-#include "dri_motor.h"    //电机驱动
+/* 设备层 */
+#include "dev_mfrc522.h"
 
-/* 设备层 */  
-#include "dev_buzzer.h"   //蜂鸣器应用
 
 /* 应用层 */
 #include "appl_data.h"    //EEPROM存储应用
-#include "apph_door.h"    //蜂鸣器应用
+#include "apph_door.h"    //门锁开门提示应用
 
 
 /*********************************************************************
@@ -131,10 +140,15 @@ void LockApp_Init( uint8 task_id )
   Buzzer_Timer4_Init();             //定时器4初始化(覆盖了Z-STACK的配置)
   Motor_Init();                     //P0_6 P0_7 P1_0 P1_1 电机驱动初始化
   I2C_Init();                       //P1_2 P1_3 I2C初始化
+  Spi_Init();                       //P1.2、P1.3、P1.7、P0.2、P0.3 读卡器端口初始化    
   
-  /*AppsL应用初始化*/
-  Data_DoorID_Init();               //门锁ID信息初始化，测试用
+  /*Devices设备初始化*/
+  MFRC522_Init();                   //MFRC522读卡模块初始化
   
+  
+  /*AppsH应用初始化*/
+//  Data_DoorID_Init();               //门锁ID信息初始化，测试用
+ 
   
   /*单播设置*/  
   LockApp_Periodic_DstAddr.addrMode = (afAddrMode_t)Addr16Bit;      //15:广播

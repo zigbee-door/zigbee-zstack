@@ -1,5 +1,5 @@
-#ifndef DRI_SPI_H_
-#define DRI_SPI_H_
+#ifndef SPI_H_
+#define SPI_H_
 
 /* ------------------------------------------------------------------------------------------------
  *                                          Includes
@@ -27,7 +27,6 @@
  * ------------------------------------------------------------------------------------------------
  */
 void Spi_Delay(uint8 n);
-void Spi_IO_Init(void);
 void Spi_Init(void);
 uint8 Spi_ReadByte(void);
 void Spi_WriteByte(uint8 Spi_Tx);

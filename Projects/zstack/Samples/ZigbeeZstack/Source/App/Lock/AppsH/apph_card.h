@@ -12,6 +12,7 @@
 
 /* …Ë±∏≤„ */
 #include "dev_mfrc522.h"
+#include "dev_buzzer.h"
 
 /* ≈‰÷√≤„ */
 #include "Config.h"
@@ -60,7 +61,7 @@
  * ------------------------------------------------------------------------------------------------
  */
 void Card_Init(void);
-uint8 Card_Authorization(uint8 CardOperType);
+//uint8 Card_Authorization(uint8 CardOperType);
 
 /* ------------------------------------------------------------------------------------------------
  *                                          Middle

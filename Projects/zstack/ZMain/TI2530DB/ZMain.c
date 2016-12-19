@@ -14,6 +14,9 @@
 #include "hal_assert.h"
 #include "hal_flash.h"
 
+#include "dev_mfrc522.h"
+
+
 
 // Maximun number of Vdd samples checked before go on
 #define MAX_VDD_SAMPLES  3
@@ -39,7 +42,7 @@ int main( void )
   HAL_BOARD_INIT();               //初始化硬件设备，例如CPU的晶振以及LED的引脚输入输出等
   zmain_vdd_check();              //电源检测,检测电源是否足够运行
   InitBoard( OB_COLD );           //初始化板子LED和按键等
-  HalDriverInit();                //初始化硬件抽象层HAL驱动，之后的APP初始化中可能有覆盖这里的驱动设置
+  HalDriverInit();                //RFID读卡器和这里的串口配置有冲突！！！！初始化硬件抽象层HAL驱动，之后的APP初始化中可能有覆盖这里的驱动设置
   osal_nv_init( NULL );           //初始化非易失性单元Flash存储器
   ZMacInit();                     //初始化MAC层
   zmain_ext_addr();               //得到并显示设备的外部地址，确定IEEE 64位地址

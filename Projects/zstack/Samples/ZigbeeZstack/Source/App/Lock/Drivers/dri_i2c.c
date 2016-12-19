@@ -16,6 +16,7 @@
  */
 void I2C_Init(void)
 {
+  P1SEL &= ~0x0C;   //P1_2、P1_3设置为普通IO口
   P1DIR |= 0x0C;    //P1_2、P1_3设置为输出
 }
 

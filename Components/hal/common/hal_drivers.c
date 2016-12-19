@@ -157,7 +157,7 @@ void HalDriverInit (void)
 #endif
 
   /* UART */
-#if (defined HAL_UART) && (HAL_UART == TRUE)
+#if (defined HAL_UART) && (HAL_UART == TRUE) //&& (defined BASE)    //这个串口和RFID有冲突，BASE可用
   HalUARTInit();
 #endif
 
@@ -168,7 +168,7 @@ void HalDriverInit (void)
 
   /* SPI */
 #if (defined HAL_SPI) && (HAL_SPI == TRUE)
-  HalSpiInit();
+  //HalSpiInit();
 #endif
 
   /* HID */

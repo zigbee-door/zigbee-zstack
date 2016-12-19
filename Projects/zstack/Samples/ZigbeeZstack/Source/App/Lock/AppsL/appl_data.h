@@ -30,7 +30,7 @@
  */
 uint8 Data_Door_Init(void);
 uint8 Data_CommonCard_Init(void);
-void Data_DoorID_Init(void);
+//void Data_DoorID_Init(void);
 
 
 void Data_DoorID_Read(uint8 *DoorId);

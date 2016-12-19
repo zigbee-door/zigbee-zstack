@@ -1,4 +1,4 @@
-#define DEV_MFRC522_C_
+#define MFRC522_C_
 
 /* ------------------------------------------------------------------------------------------------
  *                                          Includes
@@ -35,6 +35,9 @@ void MFRC522_Init(void)
  * @return      нч
  **************************************************************************************************
  */
+
+uint8 k;
+
 void MFRC522_Reset(void)
 {
   MFRC522_RST = 1;    
@@ -56,6 +59,10 @@ void MFRC522_Reset(void)
   
   MFRC522_Write(ModeReg, 0x3D);               //BIT1-BIT0=CRCPreset(01):6363
   MFRC522_Write(TxAutoReg, 0x40);	      //100%ASK
+  
+  k = MFRC522_Read(TxAutoReg);
+  MFRC522_Write(TxAutoReg, 0x40);
+  
 }
 
 
@@ -79,6 +86,8 @@ void MFRC522_AntennaOff(void)
  * @return      нч
  **************************************************************************************************
  */
+
+
 void MFRC522_AntennaOn(void)
 {
   uint8 tmp;

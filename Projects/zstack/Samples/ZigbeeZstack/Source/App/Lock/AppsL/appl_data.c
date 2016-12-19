@@ -92,28 +92,15 @@ uint8 Data_CommonCard_Init(void)
  * @return      нч
  *******************************************
  */
-void Data_DoorID_Init(void)
-{
-  uint8 DoorId[4] = {0x00};
-  uint8 Data[4] = {0x08,0x08,0x02,0x03};
+//void Data_DoorID_Init(void)
+//{
+//  uint8 DoorId[4] = {0x00};
+//  uint8 Data[4] = {DOOR_COMPANY,DOOR_BUILD,DOOR_FLOOR,DOOR_ID};
 //  AT24C256_WriteBuff(AT24C256_WRITE_ADDR,DOORID_BASE_ADDR,Data,4);
-  
-//  AT24C256_WriteByte(AT24C256_WRITE_ADDR,DOORID_BASE_ADDR+1,DOOR_BUILD);
-//  AT24C256_WriteByte(AT24C256_WRITE_ADDR,DOORID_BASE_ADDR+2,DOOR_FLOOR);
-//  AT24C256_WriteByte(AT24C256_WRITE_ADDR,DOORID_BASE_ADDR+3,DOOR_ID);
-  
-  
-  AT24C256_ReadBuff(AT24C256_WRITE_ADDR,DOORID_BASE_ADDR,DoorId,4);
 //  
-  if((DoorId[0] != DOOR_COMPANY) || (DoorId[1] != DOOR_BUILD) ||
-     (DoorId[2] != DOOR_FLOOR)   || (DoorId[3] != DOOR_ID)     )
-  {
-    AT24C256_WriteByte(AT24C256_WRITE_ADDR,DOORID_BASE_ADDR,DOOR_COMPANY);
-    AT24C256_WriteByte(AT24C256_WRITE_ADDR,DOORID_BASE_ADDR+1,DOOR_BUILD);
-    AT24C256_WriteByte(AT24C256_WRITE_ADDR,DOORID_BASE_ADDR+2,DOOR_FLOOR);
-    AT24C256_WriteByte(AT24C256_WRITE_ADDR,DOORID_BASE_ADDR+3,DOOR_ID);
-  }
-}
+////  AT24C256_ReadBuff(AT24C256_WRITE_ADDR,DOORID_BASE_ADDR,DoorId,4);
+//
+//}
 
 
 
