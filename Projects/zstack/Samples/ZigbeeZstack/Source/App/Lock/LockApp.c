@@ -13,6 +13,7 @@
 
   2.KEY                     ->   钥匙开门   P0_1      普通IO口，设置为上拉、输入，下降沿触发中断 
                                  锁扣       P0_4      普通IO口，设置为上拉、输入，下降沿触发中断
+                                 门反锁     P0_5      普通IO口，设置为上拉、输入
 
   3.BUZZER                  ->   蜂鸣器     P2_0      普通IO口，设置为上拉、输出，默认高电平   
 
@@ -53,12 +54,17 @@
 #include "MT_APP.h"
 #include "MT.h"
 
+/* 驱动层 */
+#include "dri_key.h"
+
+
 /* 设备层 */
 #include "dev_mfrc522.h"
 
 
 /* 应用层 */
 #include "appl_data.h"    //EEPROM存储应用
+#include "apph_card.h"    //RFID刷卡操作
 #include "apph_door.h"    //门锁开门提示应用
 
 
@@ -136,6 +142,7 @@ void LockApp_Init( uint8 task_id )
   LockApp_TransID = 0;              //传输序列ID  
   
   /*Drivers驱动初始化*/
+  Key_Init();                       //锁扣，反锁和钥匙开门初始化
   Buzzer_Init();                    //P2_0 蜂鸣器驱动初始化
   Buzzer_Timer4_Init();             //定时器4初始化(覆盖了Z-STACK的配置)
   Motor_Init();                     //P0_6 P0_7 P1_0 P1_1 电机驱动初始化
@@ -144,11 +151,19 @@ void LockApp_Init( uint8 task_id )
   
   /*Devices设备初始化*/
   MFRC522_Init();                   //MFRC522读卡模块初始化
+  //Card_Init();
+  
   
   
   /*AppsH应用初始化*/
-//  Data_DoorID_Init();               //门锁ID信息初始化，测试用
+//  Data_DoorID_Init();              //门锁ID信息初始化，测试用
+  Data_CommonCard_Init();            //普通卡列表初始化，测试用，最后可以远程控制，烧写的时候只需要一遍 
  
+  
+  Buzzer_System_Start();               //系统应用启动提示声音
+  Door_Close(LedOff);
+  
+  
   
   /*单播设置*/  
   LockApp_Periodic_DstAddr.addrMode = (afAddrMode_t)Addr16Bit;      //15:广播
@@ -173,6 +188,13 @@ void LockApp_Init( uint8 task_id )
   osal_start_timerEx( LockApp_TaskID,LOCKAPP_OFF_LINE_TASK_MSG_EVENT,LOCKAPP_OFF_LINE_TASK_MSG_TIMEOUT );
   
 }
+
+
+//暂时放在外面，测试方便
+uint8 Status = MFRC522_ERR;     //刷卡结果
+uint8 BlockData[16] = {0x00};   //M1卡扇区数据 
+uint8 DoorId[4] = {0x00};       //门锁ID
+
 
 
 /*********************************
@@ -236,7 +258,60 @@ uint16 LockApp_ProcessEvent( uint8 task_id, uint16 events )
   if ( events & LOCKAPP_OFF_LINE_TASK_MSG_EVENT )
   {
   
-//    Door_Open_Close();
+    /*1.刷卡授权和开门*/
+    Status = Card_ReadBlock(CARD_INFORMATION,BlockData); 
+    
+    /*1.1 授权卡操作*/
+    if(Status == MFRC522_OK)        
+    {
+      /*1.2 门未反锁*/
+      if(LOCK_PORT == LOCK_NO)      
+      {
+        /*1.2.1 门锁ID信息读取*/
+        Data_DoorID_Read(DoorId); 
+        
+        /*1.2.2 此公租房此撞楼的特权卡*/
+        if((BlockData[2] == DoorId[0]) && (BlockData[3] == DoorId[1]))    
+        {
+          
+          /*1.2.2.1 特权卡和删权卡*/
+          if(((BlockData[0] == Authorization)    && (BlockData[1] == Authorization)) ||
+            ((BlockData[0] == UnAuthorizataion) && (BlockData[1] == UnAuthorizataion)))     
+          {
+             Door_Open(LedOn);
+             LED_OFF();
+             Delay_Ms(1000);
+             Buzzer_One_Led(LedOn);
+             //Card_Authorization(BlockData[0]);      //卡号授权或删权处理
+             Door_Close(LedOn);  
+          }
+          
+          /*1.2.2.2 总卡*/
+          else if((BlockData[0] == TotalCard) && (BlockData[1] == TotalCard))   
+          {
+            Door_Open_Close();
+          }
+        }
+        
+        
+   
+        
+        
+        
+        
+        
+      }
+      
+      /*1.3 门反锁*/
+      else 
+      {
+        Buzzer_Door_Lock();       //门反锁不需要提示音   
+      }
+      
+    }
+    
+    
+    
    
     osal_start_timerEx( LockApp_TaskID, LOCKAPP_OFF_LINE_TASK_MSG_EVENT,  
         (LOCKAPP_OFF_LINE_TASK_MSG_TIMEOUT + (osal_rand() & 0x00FF)) );

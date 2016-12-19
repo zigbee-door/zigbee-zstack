@@ -9,10 +9,15 @@
 
 #include <string.h>
 
+/* 应用层 */
+#include "appl_data.h"
+
+
 
 /* 设备层 */
 #include "dev_mfrc522.h"
 #include "dev_buzzer.h"
+
 
 /* 配置层 */
 #include "Config.h"
@@ -61,7 +66,7 @@
  * ------------------------------------------------------------------------------------------------
  */
 void Card_Init(void);
-//uint8 Card_Authorization(uint8 CardOperType);
+uint8 Card_Authorization(uint8 CardOperType);
 
 /* ------------------------------------------------------------------------------------------------
  *                                          Middle

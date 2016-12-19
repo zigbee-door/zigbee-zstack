@@ -36,7 +36,7 @@ void MFRC522_Init(void)
  **************************************************************************************************
  */
 
-uint8 k;
+//uint8 k;
 
 void MFRC522_Reset(void)
 {
@@ -60,8 +60,8 @@ void MFRC522_Reset(void)
   MFRC522_Write(ModeReg, 0x3D);               //BIT1-BIT0=CRCPreset(01):6363
   MFRC522_Write(TxAutoReg, 0x40);	      //100%ASK
   
-  k = MFRC522_Read(TxAutoReg);
-  MFRC522_Write(TxAutoReg, 0x40);
+//  k = MFRC522_Read(TxAutoReg);
+//  MFRC522_Write(TxAutoReg, 0x40);           //≤‚ ‘”√
   
 }
 
