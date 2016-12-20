@@ -42,7 +42,7 @@ extern "C"
   
 // Flash Command Duration - in milliseconds
 #define LOCKAPP_FLASH_DURATION               1000
-
+  
   
   
 /*********************************************************************

@@ -206,6 +206,8 @@ void HalFlashRead(uint8 pg, uint16 offset, uint8 *buf, uint16 cnt)
  */
 void HalFlashWrite(uint16 addr, uint8 *buf, uint16 cnt)
 {
+  
+//#ifdef BASE   //如果是基站
   halDMADesc_t *ch = HAL_NV_DMA_GET_DESC();
 
   HAL_DMA_SET_SOURCE(ch, buf);
@@ -227,6 +229,9 @@ void HalFlashWrite(uint16 addr, uint8 *buf, uint16 cnt)
   FADDRL = (uint8)addr;
   FADDRH = (uint8)(addr >> 8);
 //  HalFlashWriteTrigger();
+  
+//#endif  
+  
 }
 
 /**************************************************************************************************

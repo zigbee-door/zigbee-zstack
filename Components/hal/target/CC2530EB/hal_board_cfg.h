@@ -399,9 +399,18 @@ st( \
 #endif
 
 /* Set to TRUE enable DMA usage, FALSE disable it */
-#ifndef HAL_DMA
-#define HAL_DMA TRUE
+
+#ifdef BASE   //如果是基站，就开启DMA
+  #ifndef HAL_DMA
+  #define HAL_DMA TRUE
+  #endif
+#else         //如果是门锁，还是开启DMA,因为关闭的话AES会报错
+  #ifndef HAL_DMA
+  #define HAL_DMA TRUE
+  #endif
 #endif
+
+
 
 /* Set to TRUE enable Flash access, FALSE disable it */
 #ifndef HAL_FLASH
@@ -436,51 +445,68 @@ st( \
 #endif
 
 /* Set to TRUE enable UART usage, FALSE disable it */
-#ifndef HAL_UART
-#if (defined ZAPP_P1) || (defined ZAPP_P2) || (defined ZTOOL_P1) || (defined ZTOOL_P2)
-#define HAL_UART TRUE
-#else
-#define HAL_UART FALSE
-#endif
+
+
+#ifdef BASE             //如果是基站，就开启UART
+  #ifndef HAL_UART
+  #if (defined ZAPP_P1) || (defined ZAPP_P2) || (defined ZTOOL_P1) || (defined ZTOOL_P2)
+  #define HAL_UART TRUE
+  #else
+  #define HAL_UART TRUE
+  #endif
+  #endif
+#else                   //如果是门锁，就关闭UART，因为刷卡的时候可能会死循环在HAL_UART_DMA中
+  #ifndef HAL_UART
+  #if (defined ZAPP_P1) || (defined ZAPP_P2) || (defined ZTOOL_P1) || (defined ZTOOL_P2)
+  #define HAL_UART FLASE
+  #else
+  #define HAL_UART FALSE
+  #endif
+  #endif
 #endif
 
-#if HAL_UART
-// Always prefer to use DMA over ISR.
-#if HAL_DMA
-#ifndef HAL_UART_DMA
-#if (defined ZAPP_P1) || (defined ZTOOL_P1)
-#define HAL_UART_DMA  1
-#elif (defined ZAPP_P2) || (defined ZTOOL_P2)
-#define HAL_UART_DMA  2
-#else
-#define HAL_UART_DMA  1
-#endif
-#endif
-#define HAL_UART_ISR  0
-#else
-#ifndef HAL_UART_ISR
-#if (defined ZAPP_P1) || (defined ZTOOL_P1)
-#define HAL_UART_ISR  1
-#elif (defined ZAPP_P2) || (defined ZTOOL_P2)
-#define HAL_UART_ISR  2
-#else
-#define HAL_UART_ISR  1
-#endif
-#endif
-#define HAL_UART_DMA  0
+
+#ifdef LOCK             //如果是基站
+  #if HAL_UART
+  // Always prefer to use DMA over ISR.
+  #if HAL_DMA
+  #ifndef HAL_UART_DMA
+  #if (defined ZAPP_P1) || (defined ZTOOL_P1)
+  #define HAL_UART_DMA  1
+  #elif (defined ZAPP_P2) || (defined ZTOOL_P2)
+  #define HAL_UART_DMA  2
+  #else
+  #define HAL_UART_DMA  1
+  #endif
+  #endif
+  #define HAL_UART_ISR  0
+  #else
+  #ifndef HAL_UART_ISR
+  #if (defined ZAPP_P1) || (defined ZTOOL_P1)
+  #define HAL_UART_ISR  1
+  #elif (defined ZAPP_P2) || (defined ZTOOL_P2)
+  #define HAL_UART_ISR  2
+  #else
+  #define HAL_UART_ISR  1
+  #endif
+  #endif
+  #define HAL_UART_DMA  0
+  #endif
+  // Used to set P2 priority - USART0 over USART1 if both are defined.
+  #if ((HAL_UART_DMA == 1) || (HAL_UART_ISR == 1))
+  #define HAL_UART_PRIPO             0x00
+  #else
+  #define HAL_UART_PRIPO             0x40
+  #endif
+  
+  #else
+  #define HAL_UART_DMA  0
+  #define HAL_UART_ISR  0
+  #endif
+
 #endif
 
-// Used to set P2 priority - USART0 over USART1 if both are defined.
-#if ((HAL_UART_DMA == 1) || (HAL_UART_ISR == 1))
-#define HAL_UART_PRIPO             0x00
-#else
-#define HAL_UART_PRIPO             0x40
-#endif
 
-#else
-#define HAL_UART_DMA  0
-#define HAL_UART_ISR  0
-#endif
 
 /* USB is not used for CC2530 configuration */
 #define HAL_UART_USB  0

@@ -113,83 +113,83 @@ uint8 Card_Authorization(uint8 CardOperType)
   uint8 CardCount            = 0;            //刷卡次数
   uint8 DoorId[4]            = {0x00};       //门锁ID
   uint8 DataResult           = DATA_ERR;   
-  uint16 i = 10;                             //最大允许延时2s
+  uint16 i = READNUM;                        //最大允许延时5s，需要注意这个要足够小，不然一直SPI操作会压力很大
   
   
-  /*1. 默认授权和删权延时3s*/
+  /*1. 默认授权和删权延时5s*/
   while(i--) 
   {
-    Delay_Ms(20);
+    Delay_Ms(TIMESPACE);                    //间隔延时250ms,防止读卡很频繁带来压力操作，这里最多读卡20次
     
-//    /*1.1 读取卡号区块数据*/
-//    Status = Card_ReadBlock(CARD_INFORMATION,ReadData);
-//    
-//    /*1.2 有读到卡*/
-//    if(Status == MFRC522_OK) 
-//    {
-//      /*1.2.1 授权操作*/
-//      if(CardOperType == Authorization)
-//      {
-//        
-//        /*1.2.1.1 授权卡、删权卡、总卡报错，本身已经不能再次被授权*/
-//        if(((ReadData[0] == Authorization)    && (ReadData[1] == Authorization))    ||
-//           ((ReadData[0] == UnAuthorizataion) && (ReadData[1] == UnAuthorizataion)) ||
-//           ((ReadData[0] == TotalCard)        && (ReadData[1] == TotalCard)))
-//        {
-//          Status = MFRC522_ERR; 
-//        }
-//        
-//        /*1.2.1.2 普通卡授权*/
-//        else 
-//        {
-//          /*1.2.1.2.1 普通卡存储EEPROM*/
-//          DataResult = Data_CommonCard_Auth(ReadData+12);   
-//          
-//          
-//          /*1.2.1.2.2 普通卡授权成功*/
-//          if(DataResult == DATA_OK)
-//          {
-//            Status =  MFRC522_OK; 
-//          }
-//          
-//          /*1.2.1.2.3 该普通卡已经授权或者存储失败*/
-//          else if(DataResult == DATA_ERR)                                       
-//          {
-//            Status = MFRC522_ERR;
-//          }
-//          
-//          /*1.2.1.2.4 普通卡存储列表已满*/
-//          else if(DataResult == DATA_FULL)
-//          {                                                   
-//            Buzzer_Card_Full();
-//            break;      //退出循环并警告     
-//          }
-//          
-//        }
-//      }
-//      
-//       
-//      /*1.2.2 删权操作*/
-//      else if(CardOperType == UnAuthorizataion)
-//      {
-//        
-//      }  
-//      
-//      /*1.2.3 操作成功*/
-//      if((Status == MFRC522_OK) && (DataResult != DATA_FULL) && (CardCount == 0))
-//      {    
-//        Buzzer_Card_Success();    
-//        i = 300;                //可以重复授权 
-//      }
-//      
-//      /*1.2.4 操作失败*/
-//      if((Status == MFRC522_ERR) && (DataResult != DATA_FULL) && (CardCount == 0))
-//      {
-//        Buzzer_Card_Fail();
-//        LED_ON();
-//        i = 300;                //可以重复授权 
-//      }
-//    }  
+    /*1.1 读取卡号区块数据*/
+    Status = Card_ReadBlock(CARD_INFORMATION,ReadData);
+    
+    /*1.2 有读到卡*/
+    if(Status == MFRC522_OK) 
+    {
+      /*1.2.1 授权操作*/
+      if(CardOperType == Authorization)
+      {
+        
+        /*1.2.1.1 授权卡、删权卡、总卡报错，本身已经不能再次被授权*/
+        if(((ReadData[0] == Authorization)    && (ReadData[1] == Authorization))    ||
+           ((ReadData[0] == UnAuthorizataion) && (ReadData[1] == UnAuthorizataion)) ||
+           ((ReadData[0] == TotalCard)        && (ReadData[1] == TotalCard)))
+        {
+          Status = MFRC522_ERR; 
+        }
+        
+        /*1.2.1.2 普通卡授权*/
+        else 
+        {
+          /*1.2.1.2.1 普通卡存储EEPROM*/
+          DataResult = Data_CommonCard_Auth(ReadData+12);   
+          
+          
+          /*1.2.1.2.2 普通卡授权成功*/
+          if(DataResult == DATA_OK)
+          {
+            Status =  MFRC522_OK; 
+          }
+          
+          /*1.2.1.2.3 该普通卡已经授权或者存储失败*/
+          else if(DataResult == DATA_ERR)                                       
+          {
+            Status = MFRC522_ERR;
+          }
+          
+          /*1.2.1.2.4 普通卡存储列表已满*/
+          else if(DataResult == DATA_FULL)
+          {                                                   
+            Buzzer_Card_Full();
+            break;      //退出循环并警告     
+          }
+          
+        }
+      }
+      
+       
+      /*1.2.2 删权操作*/
+      else if(CardOperType == UnAuthorizataion)
+      {
+        
+      }  
+      
+      /*1.2.3 操作成功*/
+      if((Status == MFRC522_OK) && (DataResult != DATA_FULL) && (CardCount == 0))
+      {    
+        Buzzer_Card_Success();    
+        i = READNUM;                //可以重复授权 
+      }
+      
+      /*1.2.4 操作失败*/
+      if((Status == MFRC522_ERR) && (DataResult != DATA_FULL) && (CardCount == 0))
+      {
+        Buzzer_Card_Fail();
+        LED_ON();
+        i = READNUM;                //可以重复授权 
+      }
+    }  
   }
   
   

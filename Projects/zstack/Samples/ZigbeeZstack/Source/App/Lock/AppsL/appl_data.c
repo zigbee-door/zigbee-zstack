@@ -49,11 +49,14 @@ uint8 Data_CommonCard_Init(void)
   for(i=COMMONCARD_BASE_ADDR; i<COMMONCARD_MAX1_ADDR; i+=4)                                        
   {
     AT24C256_WriteBuff(AT24C256_WRITE_ADDR,i,NullCardRom,4);
+    Delay_Ms(5);                                                             //一定要给一个小延时，写和读要有时间差异
   }
   
+
   for(i=COMMONCARD_BASE_ADDR; i<COMMONCARD_MAX1_ADDR; i+=4)                     //普通卡内存清空验证
   {
     AT24C256_ReadBuff(AT24C256_WRITE_ADDR,i,ReadData,4);
+    Delay_Ms(5); 
     if(strncmp((const char*)ReadData,(const char*)NullCardRom,4) != 0)          //如果数据不相等
     {
       DataResult = DATA_ERR;
@@ -68,11 +71,13 @@ uint8 Data_CommonCard_Init(void)
     for(i=COMMONCARD_BASE_ADDR; i<COMMONCARD_MAX1_ADDR; i+=4)                                     
     {
       AT24C256_WriteBuff(AT24C256_WRITE_ADDR,i,NullCardRom,4);
+      Delay_Ms(5); 
     }
     
     for(i=COMMONCARD_BASE_ADDR; i<COMMONCARD_MAX1_ADDR; i+=4)                   //普通卡内存清空验证
     {
       AT24C256_ReadBuff(AT24C256_WRITE_ADDR,i,ReadData,4);
+      Delay_Ms(5); 
       if(strncmp((const char*)ReadData,(const char*)NullCardRom,4) != 0)        //如果数据不相等
       {
         DataResult = DATA_ERR;
@@ -87,20 +92,23 @@ uint8 Data_CommonCard_Init(void)
 
 /*******************************************
  * @fn          Data_DoorID_Init
- * @brief       门锁ID信息初始化
+ * @brief       门锁ID信息初始化,测试用
  * @param       无
  * @return      无
  *******************************************
  */
-//void Data_DoorID_Init(void)
-//{
-//  uint8 DoorId[4] = {0x00};
-//  uint8 Data[4] = {DOOR_COMPANY,DOOR_BUILD,DOOR_FLOOR,DOOR_ID};
-//  AT24C256_WriteBuff(AT24C256_WRITE_ADDR,DOORID_BASE_ADDR,Data,4);
-//  
-////  AT24C256_ReadBuff(AT24C256_WRITE_ADDR,DOORID_BASE_ADDR,DoorId,4);
-//
-//}
+
+
+void Data_DoorID_Init(void)
+{
+  uint8 data[4] = {0x00};
+  
+  uint8 Data[4] = {DOOR_COMPANY,DOOR_BUILD,DOOR_FLOOR,DOOR_ID};
+  AT24C256_WriteBuff(AT24C256_WRITE_ADDR,DOORID_BASE_ADDR,Data,4);
+  Delay_Ms(100);
+  AT24C256_ReadBuff(AT24C256_WRITE_ADDR,DOORID_BASE_ADDR,data,4);
+  Delay_Ms(100);
+}
 
 
 
@@ -142,28 +150,42 @@ uint8 Data_CommonCard_Auth(uint8 *CardId)
   uint16 UsedPosition = COMMONCARD_MAX1_ADDR;                                 //使用过内存
   uint16 i;
   
+  
+  /*1. 轮询所有的普通卡列表*/
   for(i=COMMONCARD_BASE_ADDR; i<COMMONCARD_MAX1_ADDR; i+=4)                                                
   {
+    /*1.1 读取4字节的普通卡地址信息*/
     AT24C256_ReadBuff(AT24C256_WRITE_ADDR,i,ReadData,4);
-    if(strncmp((const char*)CardId,(const char*)ReadData,4)== 0)                //判断是否已经授权过该卡
+    
+    //这个很重要，轮询读取的时候
+    Delay_Ms(5);                                                              //一定要给个小延时
+    
+    /*1.2 如果普通卡已经授权，则退出*/
+    if(strncmp((const char*)CardId,(const char*)ReadData,4)== 0)                
     {
       DataResult = DATA_ERR;
       break;
     }
     
+    /*1.3 如果两个位置都被记录，则不会进去判断了 */
     else if((NullPosition == COMMONCARD_MAX1_ADDR) || (UsedPosition == COMMONCARD_MAX1_ADDR))
     {
+      
+      /*1.3.1 第一次循环满足该条件，如果被记录新的位置则不会进来*/
       if(NullPosition == COMMONCARD_MAX1_ADDR)
       {
-        if(strncmp((const char*)ReadData,(const char*)NullRom,4)== 0)           //寻找空内存
+        /*1.3.1.1 如果是未使用过的内存，记录该内存位置 */
+        if(strncmp((const char*)ReadData,(const char*)NullRom,4)== 0)           
         {
           NullPosition = i;                                                     //(RomPosition + 1) % 4  == 0
         }
       }
       
+      /*1.3.2 第一次循环满足该条件，如果被记录新的位置则不会进来*/
       if(UsedPosition == COMMONCARD_MAX1_ADDR)
       {
-        if(strncmp((const char*)ReadData,(const char*)UsedRom,4)== 0)           //寻找使用过的内存
+         /*1.3.2.1 如果是使用过但是被擦除的内存，记录该使用过但被擦除的内存 */
+        if(strncmp((const char*)ReadData,(const char*)UsedRom,4)== 0)           
         {
           UsedPosition = i;                                                     //(UsedPosition + 1) % 4  == 0
         }
@@ -171,21 +193,25 @@ uint8 Data_CommonCard_Auth(uint8 *CardId)
     }
   }
   
+  /*2. 如果该普通卡没有被授过权*/
   if(DataResult == DATA_OK)
   {
+    /*2.1 空内存有位置，则优先存储空内存，需要注意空内存如果有位置不可能是COMMONCARD_MAX1_ADDR，最大是需要注意空内存如果有位置不可能是COMMONCARD_MAX1_ADDR-4*/
     if((NullPosition != COMMONCARD_MAX1_ADDR) && ((NullPosition % 4) == 0))
     {
-      DataResult = Data_Storage(CardId,NullPosition);                           //普通卡存储 
+      DataResult = Data_Storage(CardId,NullPosition);                           
     }
     
+    /*2.2 空内存没有位置，则考虑存储被使用过但是被擦除的内存，这样做是为了让存储更加均匀，简单考虑也可以没有被擦除的内存，而全部设置成空内存*/
     else if((UsedPosition != COMMONCARD_MAX1_ADDR) && ((UsedPosition % 4) == 0))
     {
-      DataResult = Data_Storage(CardId,UsedPosition);                           //普通卡存储 
+      DataResult = Data_Storage(CardId,UsedPosition);                           
     }
     
+    /*2.3 如果存储容量已满 */
     else if((NullPosition == COMMONCARD_MAX1_ADDR) && (UsedPosition == COMMONCARD_MAX1_ADDR))
     {
-      DataResult = DATA_FULL;                                                   //存储容量已满
+      DataResult = DATA_FULL;                                                 
     }
   }
   
@@ -211,6 +237,9 @@ uint8 Data_CommonCard_UnAuth(uint8 *CardId)
   for(i=COMMONCARD_BASE_ADDR; i<COMMONCARD_MAX1_ADDR; i+=4) 
   {
     AT24C256_ReadBuff(AT24C256_WRITE_ADDR,i,ReadData,4);
+    
+    Delay_Ms(2);    //给个2ms的小延时
+    
     if(strncmp((const char*)CardId,(const char*)ReadData,4) == 0)               //判断是否已授权过该卡
     {
       DataResult = Data_Storage(UsedRom,i);
@@ -240,6 +269,7 @@ uint8 Data_CommonCard_Confirm(uint8 *CardId)
   for(i=COMMONCARD_BASE_ADDR; i<COMMONCARD_MAX1_ADDR; i+=4) 
   {
     AT24C256_ReadBuff(AT24C256_WRITE_ADDR,i,ReadData,4);
+    Delay_Ms(5);    
     if(strncmp((const char*)CardId,(const char*)ReadData,4)== 0)                //判断是否已授权过该卡
     {
       DataResult = DATA_OK;
@@ -287,8 +317,14 @@ uint8 Data_Storage(uint8 *WriteId, uint16 WriteAddr)
   uint8 DataResult = DATA_OK;
   
   AT24C256_WriteBuff(AT24C256_WRITE_ADDR,WriteAddr,WriteId,4);
+  
+  
+  Delay_Ms(5);    //写完之后需要给个5ms的小延时
     
   AT24C256_ReadBuff(AT24C256_WRITE_ADDR,WriteAddr,ReadId,4);
+  
+  Delay_Ms(5);    
+  
   if(strncmp((const char*)ReadId,(const char*)WriteId,4) != 0)                  //判断存储及是否成功
   {
     AT24C256_WriteBuff(AT24C256_WRITE_ADDR,WriteAddr,WriteId,4);

@@ -123,7 +123,7 @@ void Door_Close(uint8 Led)
 
 void Door_Open_Close(void)
 { 
-  uint16 i = 300;                 //最大允许延时3s
+  uint16 i = 60;                 //最大允许延时3s
   DoorStatus = PUSHOUT;           //锁扣默认在外面，没有压入
   
   Door_Open(LedOn);
@@ -131,7 +131,7 @@ void Door_Open_Close(void)
   //默认延时3s关门
   while(i--) 
   {
-    Delay_Ms(10);
+    Delay_Ms(50);
     
     if((DOOR == PUSHOUT) && (DoorStatus == PUSHIN))   //锁扣已经向内压过了，此时如果锁扣又弹出，
                                                       //模拟了一次开门的动作，门开的时候如果放手就算一次开门
@@ -141,5 +141,5 @@ void Door_Open_Close(void)
   }
   
   DoorStatus = PUSHOUT;
-  Door_Close(LedOn);
+  Door_Close(LedOff);
 }

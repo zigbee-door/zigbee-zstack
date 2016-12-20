@@ -156,8 +156,8 @@ void LockApp_Init( uint8 task_id )
   
   
   /*AppsH应用初始化*/
-//  Data_DoorID_Init();              //门锁ID信息初始化，测试用
-  Data_CommonCard_Init();            //普通卡列表初始化，测试用，最后可以远程控制，烧写的时候只需要一遍 
+  //Data_DoorID_Init();               //门锁ID信息初始化，测试用
+  Data_CommonCard_Init();           //普通卡列表初始化，测试用，最后可以远程控制，烧写的时候只需要一遍 
  
   
   Buzzer_System_Start();               //系统应用启动提示声音
@@ -282,8 +282,8 @@ uint16 LockApp_ProcessEvent( uint8 task_id, uint16 events )
              LED_OFF();
              Delay_Ms(1000);
              Buzzer_One_Led(LedOn);
-             //Card_Authorization(BlockData[0]);      //卡号授权或删权处理
-             Door_Close(LedOn);  
+             Card_Authorization(BlockData[0]);      //卡号授权或删权处理
+             Door_Close(LedOff);  
           }
           
           /*1.2.2.2 总卡*/
@@ -292,14 +292,6 @@ uint16 LockApp_ProcessEvent( uint8 task_id, uint16 events )
             Door_Open_Close();
           }
         }
-        
-        
-   
-        
-        
-        
-        
-        
       }
       
       /*1.3 门反锁*/

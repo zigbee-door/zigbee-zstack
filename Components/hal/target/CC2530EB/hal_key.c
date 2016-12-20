@@ -89,7 +89,9 @@
 #include "hal_key.h"
 #include "osal.h"
 
-#include "apph_door.h"
+#ifdef LOCK //如果是门锁
+  #include "apph_door.h"
+#endif
 
 #if (defined HAL_KEY) && (HAL_KEY == TRUE)
 
