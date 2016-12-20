@@ -101,22 +101,22 @@ void Card_Init(void)
 /**************************************************************************************************
  * @fn          Card_Authorization
  * @brief       授权操作，刷授权卡之后3S内寻卡授权操作
- * @param       CardType    ->  看授权类型，授权卡还是删权卡     
+ * @param       CardOperType    ->  看授权类型，授权卡还是删权卡   
+                DoorId          ->  门锁信息
  * @return      Status      ->  MFRC522_OK  正确  
                                 MFRC522_ERR 错误
  **************************************************************************************************
  */
-uint8 Card_Authorization(uint8 CardOperType)
+uint8 Card_Authorization(uint8 CardOperType,uint8 *DoorId)
 {
   uint8 Status               = MFRC522_ERR;                                                                       
   uint8 ReadData[BlockSize]  = {0x00};       //读M1卡扇区数据 
   uint8 CardCount            = 0;            //刷卡次数
-  uint8 DoorId[4]            = {0x00};       //门锁ID
   uint8 DataResult           = DATA_ERR;   
-  uint16 i = READNUM;                        //最大允许延时5s，需要注意这个要足够小，不然一直SPI操作会压力很大
+  uint16 i = READNUM;                        //最大允许延时3s，需要注意这个要足够小，不然一直SPI操作会压力很大
   
   
-  /*1. 默认授权和删权延时5s*/
+  /*1. 默认授权和删权延时3s*/
   while(i--) 
   {
     Delay_Ms(TIMESPACE);                    //间隔延时250ms,防止读卡很频繁带来压力操作，这里最多读卡20次
@@ -173,13 +173,59 @@ uint8 Card_Authorization(uint8 CardOperType)
       else if(CardOperType == UnAuthorizataion)
       {
         
+        /*1.2.2.1 如果读取的是删权卡，进行初始化操作*/
+        if((ReadData[0] == UnAuthorizataion) && (ReadData[1] == UnAuthorizataion) &&
+           (ReadData[2] == DoorId[0])        && (ReadData[3] == DoorId[1]))    
+        {
+          CardCount ++; 
+          i = READNUM;        //刷删权卡可继续等待3s
+          Buzzer_One();                                               
+          LED_ON();                                                            
+        }
+        
+        
+        /*1.2.2.2 如果不是本楼的删权卡，其他楼的特权卡或者本楼除删权卡的其他特权卡*/
+        else if(((ReadData[0] == Authorization)    && (ReadData[1] == Authorization))    ||
+                ((ReadData[0] == UnAuthorizataion) && (ReadData[1] == UnAuthorizataion)) ||
+                ((ReadData[0] == TotalCard)        && (ReadData[1] == TotalCard)))
+        {
+          Status = MFRC522_ERR;                                                 
+        }
+        
+        
+        /*1.2.2.3 进行删权普通卡操作*/
+        else                                                                   
+        {
+          CardCount = 0;      //等于0则可以打断删权卡的初始化处理       
+          DataResult = Data_CommonCard_UnAuth(ReadData+12);
+          
+          if(DataResult == DATA_OK)
+          {
+            Status =  MFRC522_OK; 
+          }
+          else if(DataResult == DATA_ERR)
+          {
+            Status = MFRC522_ERR;
+          }
+        }
+        
+        /*1.2.2.4 如果删权卡连续刷5次,门锁初始化处理*/ 
+        if(CardCount >= 5)                                                      
+        {                                                                                   
+          Data_Door_Init();      //门锁初始化，清空普通卡列表，还有清空记录等后续操作
+          LED_OFF();
+          Buzzer_Door_Init();
+          LED_ON();
+          break;                
+        }
       }  
       
       /*1.2.3 操作成功*/
       if((Status == MFRC522_OK) && (DataResult != DATA_FULL) && (CardCount == 0))
       {    
         Buzzer_Card_Success();    
-        i = READNUM;                //可以重复授权 
+        i = READNUM;                //暂时可以重复授权 
+        //break;                    //防止重复授权，一次只能刷 
       }
       
       /*1.2.4 操作失败*/

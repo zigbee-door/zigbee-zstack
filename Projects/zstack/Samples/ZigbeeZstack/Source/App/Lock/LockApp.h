@@ -35,7 +35,7 @@ extern "C"
 
   
 /*门锁离线刷卡开门任务*/
-#define LOCKAPP_OFF_LINE_TASK_MSG_TIMEOUT   1000    //门锁离线任务执行时间间隔1s
+#define LOCKAPP_OFF_LINE_TASK_MSG_TIMEOUT   800    //门锁离线任务执行时间间隔0.8s
 #define LOCKAPP_OFF_LINE_TASK_MSG_EVENT     0x0001  //门锁离线任务定时事件标志
   
 

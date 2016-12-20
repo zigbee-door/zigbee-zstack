@@ -204,14 +204,14 @@ void Buzzer_Door_Lock(void)
 void Buzzer_Key_Open(void)
 {
   LED_ON();
-  T4CC0   = GamutB; 
+  T4CC0   = GamutC; 
   BUZZER_ON();       
   Delay_Ms(100);
   Delay_Ms(100);
   Delay_Ms(100);
   BUZZER_OFF();
        
-  T4CC0   = GamutC;    
+  T4CC0   = GamutB;    
   BUZZER_ON();   
   Delay_Ms(100);
   Delay_Ms(100);

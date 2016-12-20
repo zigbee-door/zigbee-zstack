@@ -257,24 +257,24 @@ uint16 LockApp_ProcessEvent( uint8 task_id, uint16 events )
   /*定时事件*/
   if ( events & LOCKAPP_OFF_LINE_TASK_MSG_EVENT )
   {
-  
+    
     /*1.刷卡授权和开门*/
     Status = Card_ReadBlock(CARD_INFORMATION,BlockData); 
     
     /*1.1 授权卡操作*/
     if(Status == MFRC522_OK)        
     {
-      /*1.2 门未反锁*/
+      /*1.1.1 门未反锁*/
       if(LOCK_PORT == LOCK_NO)      
       {
-        /*1.2.1 门锁ID信息读取*/
+        /*1.1.1.1 门锁ID信息读取*/
         Data_DoorID_Read(DoorId); 
         
-        /*1.2.2 此公租房此撞楼的特权卡*/
+        /*1.1.1.2 此公租房此撞楼的特权卡*/
         if((BlockData[2] == DoorId[0]) && (BlockData[3] == DoorId[1]))    
         {
           
-          /*1.2.2.1 特权卡和删权卡*/
+          /*1.1.1.2.1 特权卡和删权卡*/
           if(((BlockData[0] == Authorization)    && (BlockData[1] == Authorization)) ||
             ((BlockData[0] == UnAuthorizataion) && (BlockData[1] == UnAuthorizataion)))     
           {
@@ -282,23 +282,53 @@ uint16 LockApp_ProcessEvent( uint8 task_id, uint16 events )
              LED_OFF();
              Delay_Ms(1000);
              Buzzer_One_Led(LedOn);
-             Card_Authorization(BlockData[0]);      //卡号授权或删权处理
+             Card_Authorization(BlockData[0],DoorId);      //卡号授权或删权处理
              Door_Close(LedOff);  
           }
           
-          /*1.2.2.2 总卡*/
+          /*1.1.1.2.2 总卡*/
           else if((BlockData[0] == TotalCard) && (BlockData[1] == TotalCard))   
           {
             Door_Open_Close();
           }
         }
+        
+        /*1.1.1.3 可以读取扇区信息的普通卡操作*/
+        else 
+        {
+          if(Data_CommonCard_Confirm(BlockData+12)) 
+          {
+            Door_Open_Close();   
+          }
+          
+          else
+          {
+            Buzzer_Card_Fail();   //无权限卡警告
+          }
+        }
       }
       
-      /*1.3 门反锁*/
+      /*1.1.2 门反锁*/
       else 
       {
         Buzzer_Door_Lock();       //门反锁不需要提示音   
       }
+      
+      
+      /*1.1.3 刷卡检测电池*/
+      //暂时不做
+      
+      
+      
+    }
+    
+    /*1.2 不能读取扇区信息的普通卡操作(需要注意的离线授权模式的普通必须可以读取扇区，不过这里可以是远程授权的操作)*/
+    else 
+    {
+      
+      //使用Card_ReadID函数获取卡号ID处理
+      
+      
       
     }
     
@@ -333,9 +363,6 @@ void LockApp_HandleKeys( uint8 shift, uint8 keys )
   /* 钥匙开门 */
   if ( keys & HAL_KEY_SW_6 ) {
     Buzzer_Key_Open();
-    Door_Open(LedOn);
-    Delay_Ms(1000);
-    Door_Close(LedOff);
   }
   
   /* 锁扣开门 */

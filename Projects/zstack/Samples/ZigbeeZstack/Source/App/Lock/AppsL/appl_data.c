@@ -125,6 +125,7 @@ void Data_DoorID_Init(void)
 void Data_DoorID_Read(uint8 *DoorId)
 {
   AT24C256_ReadBuff(AT24C256_WRITE_ADDR,DOORID_BASE_ADDR,DoorId,4);
+  Delay_Ms(5);
 }
 
 
@@ -238,7 +239,7 @@ uint8 Data_CommonCard_UnAuth(uint8 *CardId)
   {
     AT24C256_ReadBuff(AT24C256_WRITE_ADDR,i,ReadData,4);
     
-    Delay_Ms(2);    //给个2ms的小延时
+    Delay_Ms(5);    //给个5ms的小延时
     
     if(strncmp((const char*)CardId,(const char*)ReadData,4) == 0)               //判断是否已授权过该卡
     {
