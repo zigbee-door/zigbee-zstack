@@ -116,8 +116,8 @@
 #define HAL_LED_BLINK_DELAY()   st( { volatile uint32 i; for (i=0; i<0x5800; i++) { }; } )
 
 
-
-#if defined (LOCK_LED)
+//门锁的LED配置
+#if defined (LOCK)
 
   #define LED1_BV           BV(5)         //LED1位于第5位
   #define LED1_SBIT         P1_5          //端口是P1_5
@@ -134,7 +134,26 @@
   #define LED3_DDR          P1DIR
   #define LED3_POLARITY     ACTIVE_LOW
 
-#elif defined (BASE_LED)
+#elif defined (BASE)
+
+
+  /*蓝灯*/
+  #define LED1_BV           BV(0)
+  #define LED1_SBIT         P1_0
+  #define LED1_DDR          P1DIR
+  #define LED1_POLARITY     ACTIVE_LOW
+
+  /*绿灯*/
+  #define LED2_BV           BV(1)
+  #define LED2_SBIT         P1_1
+  #define LED2_DDR          P1DIR
+  #define LED2_POLARITY     ACTIVE_LOW
+
+  /*黄灯*/
+  #define LED3_BV           BV(4)
+  #define LED3_SBIT         P0_4
+  #define LED3_DDR          P0DIR
+  #define LED3_POLARITY     ACTIVE_LOW  
 
 #endif
 
@@ -144,25 +163,33 @@
  * ------------------------------------------------------------------------------------------------
  */
 
+//门锁和基站都有
 #define ACTIVE_LOW        !
 #define ACTIVE_HIGH       !!    /* double negation forces result to be '1' */
 
-/* 门锁按键 */
-#define PUSH1_BV          BV(1)
-#define PUSH1_SBIT        P0_1
 
-#if defined (HAL_BOARD_CC2530EB_REV17)
-  #define PUSH1_POLARITY    ACTIVE_HIGH    //门锁的钥匙开门默认高电平触发，修改这里
-#elif defined (HAL_BOARD_CC2530EB_REV13)
-  #define PUSH1_POLARITY    ACTIVE_LOW
-#else
-  #error Unknown Board Indentifier
+//门锁的按钮配置
+#ifdef LOCK
+  /* 门锁按键 */
+  #define PUSH1_BV          BV(1)
+  #define PUSH1_SBIT        P0_1
+  
+  #if defined (HAL_BOARD_CC2530EB_REV17)
+    #define PUSH1_POLARITY    ACTIVE_HIGH    //门锁的钥匙开门默认高电平触发，修改这里
+  #elif defined (HAL_BOARD_CC2530EB_REV13)
+    #define PUSH1_POLARITY    ACTIVE_LOW
+  #else
+    #error Unknown Board Indentifier
+  #endif
+  
+  /* 锁扣 */
+  #define PUSH2_BV          BV(4)
+  #define PUSH2_SBIT        P0_4
+  #define PUSH2_POLARITY    ACTIVE_HIGH
+
 #endif
 
-/* 锁扣 */
-#define PUSH2_BV          BV(4)
-#define PUSH2_SBIT        P0_4
-#define PUSH2_POLARITY    ACTIVE_HIGH
+
 
 /* ------------------------------------------------------------------------------------------------
  *                         OSAL NV implemented by internal flash pages.
@@ -241,13 +268,12 @@ extern void MAC_RfFrontendSetup(void);
   /* Turn on cache prefetch mode */                              \
   PREFETCH_ENABLE();                                             \
                                                                  \
-  /*设置P1_5为输出，LED灯*/                          \
+  /*LED灯设置为输出*/                          \
   LED1_DDR |= LED1_BV;                                           \
   LED2_DDR |= LED2_BV;                                           \
   LED3_DDR |= LED3_BV;                                           \
                                                                  \
-  /* 默认设置为三态：P0INP |= PUSH2_BV，这里设置P0.1 0.4 0.5为高电平 */                                      \
-  P0INP &= ~0x32;                                             \
+  /* 默认设置为三态：P0INP |= PUSH2_BV，这里不设置P0.1 0.4 0.5，放在LOCK的dri_key.c中设置 */                                      \
 }
 
 #elif defined (HAL_BOARD_CC2530EB_REV13) || defined (HAL_PA_LNA) || defined (HAL_PA_LNA_CC2590)

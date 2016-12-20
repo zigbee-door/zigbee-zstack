@@ -14,7 +14,6 @@
 #include "hal_assert.h"
 #include "hal_flash.h"
 
-#include "dev_mfrc522.h"
 
 
 

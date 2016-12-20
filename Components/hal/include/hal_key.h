@@ -67,7 +67,7 @@ extern "C"
 /* 按键状态 */
 #define HAL_KEY_STATE_NORMAL          0x00
 #define HAL_KEY_STATE_SHIFT           0x01
-
+ 
 /* Switches (keys) */
 /* 摇杆和按键定义 */  
 #define HAL_KEY_SW_1 0x01  // Joystick up 摇杆按键P2_0 上

@@ -108,54 +108,57 @@
 #define HAL_KEY_DEBOUNCE_VALUE  25    //按键消抖时间
 #define HAL_KEY_POLLING_VALUE   100
 
-/* CPU port interrupt */
-/* 配置按键和摇杆的中断状态寄存器 */
-#define HAL_KEY_CPU_PORT_0_IF P0IF
-#define HAL_KEY_CPU_PORT_2_IF P2IF
+//门锁的按键配置
+#ifdef LOCK
+
+  /* CPU port interrupt */
+  /* 配置按键和摇杆的中断状态寄存器 */
+  #define HAL_KEY_CPU_PORT_0_IF P0IF
+  #define HAL_KEY_CPU_PORT_2_IF P2IF
 
 
-/********************钥匙开门**********************/
+  /********************钥匙开门**********************/
+  
+  /* SW_6 is at P0.1 */
+  #define HAL_KEY_SW_6_PORT   P0
+  #define HAL_KEY_SW_6_BIT    BV(1)
+  #define HAL_KEY_SW_6_SEL    P0SEL
+  #define HAL_KEY_SW_6_DIR    P0DIR
+  
+  /* edge interrupt */
+  /* 中断触发方式配置 */
+  #define HAL_KEY_SW_6_EDGEBIT  BV(0)
+  #define HAL_KEY_SW_6_EDGE     HAL_KEY_FALLING_EDGE  //下降沿触发中断
+  
+  
+  /* SW_6 interrupts */
+  /* 按键中断寄存器 */
+  #define HAL_KEY_SW_6_IEN      IEN1  /* CPU interrupt mask register */
+  #define HAL_KEY_SW_6_IENBIT   BV(5) /* Mask bit for all of Port_0 */
+  #define HAL_KEY_SW_6_ICTL     P0IEN /* Port Interrupt Control register */
+  #define HAL_KEY_SW_6_ICTLBIT  BV(1) /* P0IEN - P0.1 enable/disable bit */
+  #define HAL_KEY_SW_6_PXIFG    P0IFG /* Interrupt flag at source */
+  
+  /********************锁扣，用于检测关门**********************/
+  /* SW_7 设置为 P0.4 */
+  #define HAL_KEY_SW_7_PORT   P0
+  #define HAL_KEY_SW_7_BIT    BV(4)
+  #define HAL_KEY_SW_7_SEL    P0SEL
+  #define HAL_KEY_SW_7_DIR    P0DIR
+  
+  
+  /* 中断触发方式配置 */
+  #define HAL_KEY_SW_7_EDGEBIT  BV(0)
+  #define HAL_KEY_SW_7_EDGE     HAL_KEY_FALLING_EDGE  //下降沿触发中断
+  
+  /* 按键中断寄存器 */
+  #define HAL_KEY_SW_7_IEN      IEN1  /* CPU interrupt mask register */
+  #define HAL_KEY_SW_7_IENBIT   BV(5) /* Mask bit for all of Port_0 */
+  #define HAL_KEY_SW_7_ICTL     P0IEN /* Port Interrupt Control register */
+  #define HAL_KEY_SW_7_ICTLBIT  BV(4) /* P0IEN - P0.4 enable/disable bit */
+  #define HAL_KEY_SW_7_PXIFG    P0IFG /* Interrupt flag at source */
 
-/* SW_6 is at P0.1 */
-#define HAL_KEY_SW_6_PORT   P0
-#define HAL_KEY_SW_6_BIT    BV(1)
-#define HAL_KEY_SW_6_SEL    P0SEL
-#define HAL_KEY_SW_6_DIR    P0DIR
-
-/* edge interrupt */
-/* 中断触发方式配置 */
-#define HAL_KEY_SW_6_EDGEBIT  BV(0)
-#define HAL_KEY_SW_6_EDGE     HAL_KEY_FALLING_EDGE  //下降沿触发中断
-
-
-/* SW_6 interrupts */
-/* 按键中断寄存器 */
-#define HAL_KEY_SW_6_IEN      IEN1  /* CPU interrupt mask register */
-#define HAL_KEY_SW_6_IENBIT   BV(5) /* Mask bit for all of Port_0 */
-#define HAL_KEY_SW_6_ICTL     P0IEN /* Port Interrupt Control register */
-#define HAL_KEY_SW_6_ICTLBIT  BV(1) /* P0IEN - P0.1 enable/disable bit */
-#define HAL_KEY_SW_6_PXIFG    P0IFG /* Interrupt flag at source */
-
-/********************锁扣，用于检测关门**********************/
-/* SW_7 设置为 P0.4 */
-#define HAL_KEY_SW_7_PORT   P0
-#define HAL_KEY_SW_7_BIT    BV(4)
-#define HAL_KEY_SW_7_SEL    P0SEL
-#define HAL_KEY_SW_7_DIR    P0DIR
-
-
-/* 中断触发方式配置 */
-#define HAL_KEY_SW_7_EDGEBIT  BV(0)
-#define HAL_KEY_SW_7_EDGE     HAL_KEY_FALLING_EDGE  //下降沿触发中断
-
-/* 按键中断寄存器 */
-#define HAL_KEY_SW_7_IEN      IEN1  /* CPU interrupt mask register */
-#define HAL_KEY_SW_7_IENBIT   BV(5) /* Mask bit for all of Port_0 */
-#define HAL_KEY_SW_7_ICTL     P0IEN /* Port Interrupt Control register */
-#define HAL_KEY_SW_7_ICTLBIT  BV(4) /* P0IEN - P0.4 enable/disable bit */
-#define HAL_KEY_SW_7_PXIFG    P0IFG /* Interrupt flag at source */
-
-
+#endif
 
 /********************摇杆没用**********************/
 /* Joy stick move at P2.0 */
@@ -221,7 +224,9 @@ void HalKeyInit( void )
   /* Initialize previous key to 0 */
   /* 初始化按键为0 */
   halKeySavedKeys = 0;
-
+  
+//门锁的按键配置
+#ifdef LOCK
   /* 钥匙开门 */
   HAL_KEY_SW_6_SEL &= ~(HAL_KEY_SW_6_BIT);    /* 设置为GPIO口，Set pin function to GPIO */
   HAL_KEY_SW_6_DIR &= ~(HAL_KEY_SW_6_BIT);    /* 设置为输入模式，Set pin direction to Input */
@@ -230,7 +235,7 @@ void HalKeyInit( void )
   HAL_KEY_SW_7_SEL &= ~(HAL_KEY_SW_7_BIT);    /* 设置为GPIO口，Set pin function to GPIO */
   HAL_KEY_SW_7_DIR &= ~(HAL_KEY_SW_7_BIT);    /* 设置为输入模式，Set pin direction to Input */
   
-  
+#endif 
   
 //这里取消对摇杆按键的输入口配置,P2_0口需要配置成蜂鸣器而不是摇杆按键
 //  HAL_KEY_JOY_MOVE_SEL &= ~(HAL_KEY_JOY_MOVE_BIT); /* Set pin function to GPIO */
@@ -270,6 +275,8 @@ void HalKeyConfig (bool interruptEnable, halKeyCBack_t cback)
   {
     /* Rising/Falling edge configuratinn */
     
+//门锁的按键配置
+#ifdef LOCK    
     /* 钥匙开门 */
     PICTL &= ~(HAL_KEY_SW_6_EDGEBIT);    /* Clear the edge bit */
     
@@ -286,7 +293,7 @@ void HalKeyConfig (bool interruptEnable, halKeyCBack_t cback)
   #if (HAL_KEY_SW_7_EDGE == HAL_KEY_FALLING_EDGE)
     PICTL |= HAL_KEY_SW_7_EDGEBIT;    //锁扣
   #endif
-
+    
 
     /* Interrupt configuration:
      * - Enable interrupt generation at the port
@@ -304,7 +311,7 @@ void HalKeyConfig (bool interruptEnable, halKeyCBack_t cback)
     HAL_KEY_SW_7_IEN |= HAL_KEY_SW_7_IENBIT;
     HAL_KEY_SW_7_PXIFG = ~(HAL_KEY_SW_7_BIT);
     
-    
+#endif
 
     /* Rising/Falling edge configuratinn */
 
@@ -334,6 +341,10 @@ void HalKeyConfig (bool interruptEnable, halKeyCBack_t cback)
   else    /* Interrupts NOT enabled */
   {
     
+//门锁的按键配置
+#ifdef LOCK    
+    
+    
      /* 钥匙开门 */
     HAL_KEY_SW_6_ICTL &= ~(HAL_KEY_SW_6_ICTLBIT); /* don't generate interrupt */
     HAL_KEY_SW_6_IEN &= ~(HAL_KEY_SW_6_IENBIT);   /* Clear interrupt enable bit */
@@ -342,6 +353,7 @@ void HalKeyConfig (bool interruptEnable, halKeyCBack_t cback)
     HAL_KEY_SW_7_ICTL &= ~(HAL_KEY_SW_7_ICTLBIT); /* don't generate interrupt */
     HAL_KEY_SW_7_IEN &= ~(HAL_KEY_SW_7_IENBIT);   /* Clear interrupt enable bit */
     
+#endif    
 
     osal_start_timerEx (Hal_TaskID, HAL_KEY_EVENT, HAL_KEY_POLLING_VALUE);    /* Kick off polling */
   }
@@ -364,6 +376,9 @@ uint8 HalKeyRead ( void )
 {
   uint8 keys = 0;
 
+ //门锁的按键配置
+#ifdef LOCK 
+  
    /* 钥匙开门 */
   if (HAL_PUSH_BUTTON1())
   {
@@ -375,6 +390,9 @@ uint8 HalKeyRead ( void )
   {
     keys |= HAL_KEY_SW_7;
   }
+  
+#endif  
+  
 
 /*  if ((HAL_KEY_JOY_MOVE_PORT & HAL_KEY_JOY_MOVE_BIT))  // Key is active low 
   {
@@ -403,6 +421,11 @@ void HalKeyPoll (void)
     keys = halGetJoyKeyInput();
   }
 */
+  
+  
+//门锁的按键配置
+#ifdef LOCK  
+  
   if (!HAL_PUSH_BUTTON1())//钥匙开门
   {
     keys |= HAL_KEY_SW_6; 
@@ -412,6 +435,8 @@ void HalKeyPoll (void)
   {
     keys |= HAL_KEY_SW_7; 
   }
+
+#endif  
   
   
   if (!Hal_KeyIntEnable)
@@ -504,6 +529,9 @@ void halProcessKeyInterrupt (void)
 {
   bool valid=FALSE;
 
+//门锁的按键配置
+#ifdef LOCK  
+  
   /* 钥匙开门 */
   if (HAL_KEY_SW_6_PXIFG & HAL_KEY_SW_6_BIT)  /* Interrupt Flag has been set */
   {
@@ -518,6 +546,8 @@ void halProcessKeyInterrupt (void)
     valid = TRUE;
   }
 
+#endif 
+  
 //  if (HAL_KEY_JOY_MOVE_PXIFG & HAL_KEY_JOY_MOVE_BIT)  /* Interrupt Flag has been set */
 //  {
 //    HAL_KEY_JOY_MOVE_PXIFG = ~(HAL_KEY_JOY_MOVE_BIT); /* Clear Interrupt Flag */
@@ -574,6 +604,9 @@ uint8 HalKeyExitSleep ( void )
 HAL_ISR_FUNCTION( halKeyPort0Isr, P0INT_VECTOR )
 {
   
+#ifdef DOOR
+  
+  
   /* 钥匙开门 */
   if (HAL_KEY_SW_6_PXIFG & HAL_KEY_SW_6_BIT)
   {
@@ -598,6 +631,10 @@ HAL_ISR_FUNCTION( halKeyPort0Isr, P0INT_VECTOR )
   HAL_KEY_SW_6_PXIFG = 0;
   HAL_KEY_SW_7_PXIFG = 0;
   HAL_KEY_CPU_PORT_0_IF = 0;
+  
+#endif  
+  
+  
 }
 
 
