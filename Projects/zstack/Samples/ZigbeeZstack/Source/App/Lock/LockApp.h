@@ -28,20 +28,37 @@ extern "C"
 #define LOCKAPP_PROFID             0x0F08     //簇ID
 #define LOCKAPP_DEVICEID           0x0001     //设备ID
 #define LOCKAPP_DEVICE_VERSION     0          //设备版本号
-#define LOCKAPP_FLAGS              0          //保留
-#define LOCKAPP_MAX_CLUSTERS       2          //最大输入/输出簇个数(这里主要分为广播和组播)
-#define LOCKAPP_PERIODIC_CLUSTERID 1          //广播簇ID,包括输入和输出
-#define LOCKAPP_FLASH_CLUSTERID     2         //组播簇ID,包括输入和输出
+#define LOCKAPP_FLAGS              0          //保留  
+#define LOCKAPP_MAX_CLUSTERS       1          //最大输入/输出命令（簇）个数
+  
+  
+  
 
+
+
+/*命令类型（簇ID）*/
+#define BROADCAST_TEST_ID           0x01      //广播测试命令
+
+
+
+
+
+
+  
+  
   
 /*门锁离线刷卡开门任务*/
 #define LOCKAPP_OFF_LINE_TASK_MSG_TIMEOUT   800    //门锁离线任务执行时间间隔0.8s
 #define LOCKAPP_OFF_LINE_TASK_MSG_EVENT     0x0001  //门锁离线任务定时事件标志
   
-
   
-// Flash Command Duration - in milliseconds
-#define LOCKAPP_FLASH_DURATION               1000
+  
+/*协调器地址*/
+#define COORDINATOR_ADDR                    0x0000  
+  
+  
+  
+
   
   
   

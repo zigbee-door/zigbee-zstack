@@ -75,8 +75,7 @@
 /*输入输出簇列表，命令列表*/
 const cId_t LockApp_ClusterList[LOCKAPP_MAX_CLUSTERS] = 
 {
-  LOCKAPP_PERIODIC_CLUSTERID,    //广播的簇:0x01
-  LOCKAPP_FLASH_CLUSTERID        //组播的簇:0x02
+  BROADCAST_TEST_ID      //广播测试命令    
 };
 
 /*Zigbee简单端点描述符*/
@@ -106,8 +105,7 @@ devStates_t LockApp_NwkState;           //网络状态
 
 uint8 LockApp_TransID;                  // 传输序列ID
 
-afAddrType_t LockApp_Periodic_DstAddr;  //发送数据的广播目的地址
-afAddrType_t LockApp_Flash_DstAddr;     //发送数据的组播目的地址
+afAddrType_t LockApp_Single_DstAddr;    //发送数据的单播目的地址
 
 aps_Group_t LockApp_Group;              //组信息定义
 
@@ -119,8 +117,9 @@ uint8 LockAppFlashCounter = 0;
  */
 void LockApp_HandleKeys( uint8 shift, uint8 keys ); 
 void LockApp_MessageMSGCB( afIncomingMSGPacket_t *pckt );
-void LockApp_SendPeriodicMessage( void );
-void LockApp_SendFlashMessage( uint16 flashTime );
+
+
+void LockApp_SendMessage(afAddrType_t *DstAddr, uint8 *SendData, uint8 len, uint8 Cmd); //门锁给协调器发送数据的函数
 
 
 /*********************************************************************
@@ -166,9 +165,9 @@ void LockApp_Init( uint8 task_id )
   
   
   /*单播设置*/  
-  LockApp_Periodic_DstAddr.addrMode = (afAddrMode_t)Addr16Bit;      //15:广播
-  LockApp_Periodic_DstAddr.endPoint = LOCKAPP_ENDPOINT;             //端点号：20
-  LockApp_Periodic_DstAddr.addr.shortAddr = 0x0000;                 //协调器地址
+  LockApp_Single_DstAddr.addrMode = (afAddrMode_t)Addr16Bit;      //15:广播
+  LockApp_Single_DstAddr.endPoint = LOCKAPP_ENDPOINT;             //端点号：20
+  LockApp_Single_DstAddr.addr.shortAddr = COORDINATOR_ADDR;       //协调器地址
   
  
   /*定义本设备用来通信的APS层端点描述符*/
@@ -194,7 +193,6 @@ void LockApp_Init( uint8 task_id )
 uint8 Status = MFRC522_ERR;     //刷卡结果
 uint8 BlockData[16] = {0x00};   //M1卡扇区数据 
 uint8 DoorId[4] = {0x00};       //门锁ID
-
 
 
 /*********************************
@@ -257,6 +255,10 @@ uint16 LockApp_ProcessEvent( uint8 task_id, uint16 events )
   /*定时事件*/
   if ( events & LOCKAPP_OFF_LINE_TASK_MSG_EVENT )
   {
+    
+    
+
+    
     
     /*1.刷卡授权和开门*/
     Status = Card_ReadBlock(CARD_INFORMATION,BlockData); 
@@ -387,114 +389,77 @@ void LockApp_HandleKeys( uint8 shift, uint8 keys )
  * @return  none
  */
 
+
+
+
+
+
 //接收数据函数
+
+uint8 flag=false;
+
 void LockApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
 {
-  uint16 flashTime;
-  byte buf[3];
+  
+//  byte buf[3];
 
   //判断接收到的簇ID
   switch ( pkt->clusterId )
   {
-    //收到广播数据
-    case LOCKAPP_PERIODIC_CLUSTERID:  
-
-      /*用户添加**/
-      osal_memset(buf,0,3);                   //先初始化buf全为0,清零操作
-      osal_memcpy(buf,pkt->cmd.Data,2);
+    //广播测试数据命令
+    case BROADCAST_TEST_ID:    
       
-      if((buf[0] == '1') && (buf[1] == '1'))  //判断接收的是否为D1
+      if((pkt->cmd.Data[0] == 0x31) && (pkt->cmd.Data[1] == 0x34)) 
       {
-        //HalLedBlink(HAL_LED_2,0,50,500);      //LED2间隔500ms闪烁
-        
-        #if defined(ZDO_COORDINATOR)
-        HalUARTWrite(0,"CoordinatorEB-Pro 57 Receive '11' OK\n", sizeof("CoordinatorEB-Pro 57 Receive 'D1' OK\n"));//串口发送
-        //HalLedBlink(HAL_LED_1,0,50,500);      //LED1间隔500ms闪烁
-        LockApp_SendPeriodicMessage();      //协调器接收到D1后返回D1给终端，让终端LED1也闪烁
-        #endif
+        //Buzzer_One();
+        if(!flag) {
+          HAL_TURN_ON_LED1();
+          flag = true;
+        } else {
+          HAL_TURN_OFF_LED1();
+          flag = false;
+        }
       }
-      else
-      {
-        //HalLedSet(HAL_LED_2,HAL_LED_MODE_ON);
-      }
+
       break;
 
-    //收到组播数据
-    case LOCKAPP_FLASH_CLUSTERID:
-      flashTime = BUILD_UINT16(pkt->cmd.Data[1], pkt->cmd.Data[2] );
-      //HalLedBlink( HAL_LED_4, 4, 50, (flashTime / 4) );
-      break;
   }
 }
 
-/*********************************************************************
- * @fn      LockApp_SendPeriodicMessage
- *
- * @brief   Send the periodic message.
- *
- * @param   none
- *
- * @return  none
- */
 
-//发送周期信息
-//在LockApp_ProcessEvent中的osal_start_timerEx中设置了5s的定时器
-//5s以后的定时事件就是调用了LockApp_SendPeriodicMessage函数进行数据的发送
-//所以每5s会发送一次数据，而且这个数据是广播数据
-void LockApp_SendPeriodicMessage( void )
+
+
+
+
+/*********************************************************************
+*********************************************************************/
+
+/*********************************
+  Funcname:       LockApp_SendMessage
+  Description:    发送RF射频数据函数
+  Author:         zhuxiankang
+  parm:           SendData -> 发送的数据 
+                  Cmd      -> 命令类型（或者也可以说串/簇ID/群集ID）
+*********************************/
+void LockApp_SendMessage(afAddrType_t *DstAddr, uint8 *SendData, uint8 len, uint8 Cmd)
 {
   
-  byte SendData[3] = "11";
-  
   //调用AF_DataRequest将数据无线广播出去
-  if ( AF_DataRequest( &LockApp_Periodic_DstAddr,   //目的节点的地址信息
-                       &LockApp_epDesc,             //端点信息
-                       LOCKAPP_PERIODIC_CLUSTERID,  //簇ID信息，这里是发送的簇ID,与接收到的簇ID一一对应
-                       2,                             //数据长度
+  if ( AF_DataRequest( //&BaseApp_Periodic_DstAddr,   //目的节点的地址信息
+                       DstAddr,
+                       &LockApp_epDesc,               //端点信息
+                       Cmd,                           //命令类型
+                       len,                           //数据长度
                        SendData,                      //数据
-                       &LockApp_TransID,            //发送消息ID
+                       &LockApp_TransID,              //发送消息ID
                        AF_DISCV_ROUTE,                //发送选项
                        AF_DEFAULT_RADIUS )            //最大跳数半径
       == afStatus_SUCCESS )    
   {
+    //这里可以闪烁LED灯表示发送成功
   }
   else
   {
-    //HalLedSet(HAL_LED_1,HAL_LED_MODE_ON);
-    // Error occurred in request to send.
+    //发送失败
   }
 }
-
-/*********************************************************************
- * @fn      LockApp_SendFlashMessage
- *
- * @brief   Send the flash message to group 1.
- *
- * @param   flashTime - in milliseconds
- *
- * @return  none
- */
-void LockApp_SendFlashMessage( uint16 flashTime )
-{
-  uint8 buffer[3];
-  buffer[0] = (uint8)(LockAppFlashCounter++);
-  buffer[1] = LO_UINT16( flashTime );
-  buffer[2] = HI_UINT16( flashTime );
-
-  if ( AF_DataRequest( &LockApp_Flash_DstAddr, &LockApp_epDesc,
-                       LOCKAPP_FLASH_CLUSTERID,
-                       3,
-                       buffer,
-                       &LockApp_TransID,
-                       AF_DISCV_ROUTE,
-                       AF_DEFAULT_RADIUS ) == afStatus_SUCCESS )
-  {
-  }
-  else
-  {
-    // Error occurred in request to send.
-  }
-}
-
-/*********************************************************************
-*********************************************************************/

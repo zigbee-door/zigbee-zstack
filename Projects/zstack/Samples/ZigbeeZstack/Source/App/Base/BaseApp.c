@@ -62,8 +62,7 @@
 /*输入输出簇列表，命令列表*/
 const cId_t BaseApp_ClusterList[BASEAPP_MAX_CLUSTERS] = 
 {
-  BASEAPP_PERIODIC_CLUSTERID,    //广播的簇:0x01
-  BASEAPP_FLASH_CLUSTERID        //组播的簇:0x02
+  BROADCAST_TEST_ID      //广播测试命令    
 };
 
 /*Zigbee简单端点描述符*/
@@ -93,8 +92,8 @@ devStates_t BaseApp_NwkState;           //网络状态
 
 uint8 BaseApp_TransID;                  // 传输序列ID
 
-afAddrType_t BaseApp_Periodic_DstAddr;  //发送数据的广播目的地址
-afAddrType_t BaseApp_Flash_DstAddr;     //发送数据的组播目的地址
+afAddrType_t BaseApp_BroadCast_DstAddr; //发送数据的广播目的地址
+afAddrType_t BaseApp_Single_DstAddr;    //发送数据的单播目的地址
 
 aps_Group_t BaseApp_Group;              //组信息定义
 
@@ -106,8 +105,10 @@ uint8 BaseAppFlashCounter = 0;
  */
 void BaseApp_HandleKeys( uint8 shift, uint8 keys ); 
 void BaseApp_MessageMSGCB( afIncomingMSGPacket_t *pckt );
-void BaseApp_SendPeriodicMessage( void );
-void BaseApp_SendFlashMessage( uint16 flashTime );
+
+
+void BaseApp_SendMessage(afAddrType_t *DstAddr, uint8 *SendData, uint8 len, uint8 Cmd);  //基站发送命令给门锁的函数
+
 
 
 /*********************************************************************
@@ -128,11 +129,16 @@ void BaseApp_Init( uint8 task_id )
   BaseApp_NwkState = DEV_INIT;      //网络状态初始化为DEV_INIT
   BaseApp_TransID = 0;              //传输序列ID  
   
-
+  
   /*单播设置*/  
-  BaseApp_Periodic_DstAddr.addrMode = (afAddrMode_t)Addr16Bit;      //15:广播
-  BaseApp_Periodic_DstAddr.endPoint = BASEAPP_ENDPOINT;             //端点号：20
-  BaseApp_Periodic_DstAddr.addr.shortAddr = 0x0000;                 //协调器地址
+  BaseApp_Single_DstAddr.addrMode = (afAddrMode_t)Addr16Bit;        //3:单播
+  BaseApp_Single_DstAddr.endPoint = BASEAPP_ENDPOINT;               //端点号：20
+  //BaseApp_Periodic_DstAddr.addr.shortAddr = 0x0000;               //协调器地址
+  
+  /*广播设置*/
+  BaseApp_BroadCast_DstAddr.addrMode = (afAddrMode_t)AddrBroadcast;  //15:广播
+  BaseApp_BroadCast_DstAddr.endPoint = BASEAPP_ENDPOINT;             //端点号：20
+  BaseApp_BroadCast_DstAddr.addr.shortAddr = BROADCAST_ADDR;         //广播地址 
   
  
   /*定义本设备用来通信的APS层端点描述符*/
@@ -215,7 +221,14 @@ uint16 BaseApp_ProcessEvent( uint8 task_id, uint16 events )
   {
 
 
-    HAL_TOGGLE_LED3();
+    //HAL_TOGGLE_LED2();
+    uint8 data[2] = {0x31,0x34};
+    
+    BaseApp_SendMessage(&BaseApp_BroadCast_DstAddr,   //广播目的地址
+                        data,                         //数据
+                        2,
+                        BROADCAST_TEST_ID             //广播测试命令
+    );
     
     
     osal_start_timerEx( BaseApp_TaskID, BASEAPP_OFF_LINE_TASK_MSG_EVENT,  
@@ -257,105 +270,46 @@ void BaseApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
   //判断接收到的簇ID
   switch ( pkt->clusterId )
   {
-    //收到广播数据
-    case BASEAPP_PERIODIC_CLUSTERID:  
-
-      /*用户添加**/
-      osal_memset(buf,0,3);                   //先初始化buf全为0,清零操作
-      osal_memcpy(buf,pkt->cmd.Data,2);
-      
-      if((buf[0] == '1') && (buf[1] == '1'))  //判断接收的是否为D1
-      {
-        HalLedBlink(HAL_LED_2,0,50,500);      //LED2间隔500ms闪烁
-        
-        #if defined(ZDO_COORDINATOR)
-        HalUARTWrite(0,"CoordinatorEB-Pro 57 Receive '11' OK\n", sizeof("CoordinatorEB-Pro 57 Receive 'D1' OK\n"));//串口发送
-        //HalLedBlink(HAL_LED_1,0,50,500);      //LED1间隔500ms闪烁
-        BaseApp_SendPeriodicMessage();      //协调器接收到D1后返回D1给终端，让终端LED1也闪烁
-        #endif
-      }
-      else
-      {
-        HalLedSet(HAL_LED_2,HAL_LED_MODE_ON);
-      }
+    //广播测试命令
+    case BROADCAST_TEST_ID: 
       break;
 
-    //收到组播数据
-    case BASEAPP_FLASH_CLUSTERID:
-      flashTime = BUILD_UINT16(pkt->cmd.Data[1], pkt->cmd.Data[2] );
-      //HalLedBlink( HAL_LED_4, 4, 50, (flashTime / 4) );
-      break;
   }
 }
 
-/*********************************************************************
- * @fn      BaseApp_SendPeriodicMessage
- *
- * @brief   Send the periodic message.
- *
- * @param   none
- *
- * @return  none
- */
 
-//发送周期信息
-//在BaseApp_ProcessEvent中的osal_start_timerEx中设置了5s的定时器
-//5s以后的定时事件就是调用了BaseApp_SendPeriodicMessage函数进行数据的发送
-//所以每5s会发送一次数据，而且这个数据是广播数据
-void BaseApp_SendPeriodicMessage( void )
+
+
+
+/*********************************************************************
+*********************************************************************/
+
+/*********************************
+  Funcname:       BaseApp_ProcessEvent
+  Description:    发送RF射频数据函数
+  Author:         zhuxiankang
+  parm:           SendData -> 发送的数据 
+                  Cmd      -> 命令类型（或者也可以说串/簇ID/群集ID）
+*********************************/
+void BaseApp_SendMessage(afAddrType_t *DstAddr, uint8 *SendData, uint8 len, uint8 Cmd)
 {
   
-  byte SendData[3] = "11";
-  
   //调用AF_DataRequest将数据无线广播出去
-  if ( AF_DataRequest( &BaseApp_Periodic_DstAddr,   //目的节点的地址信息
-                       &BaseApp_epDesc,             //端点信息
-                       BASEAPP_PERIODIC_CLUSTERID,  //簇ID信息，这里是发送的簇ID,与接收到的簇ID一一对应
-                       2,                             //数据长度
+  if ( AF_DataRequest( //&BaseApp_Periodic_DstAddr,   //目的节点的地址信息
+                       DstAddr,
+                       &BaseApp_epDesc,               //端点信息
+                       Cmd,                           //命令类型
+                       len,                           //数据长度
                        SendData,                      //数据
-                       &BaseApp_TransID,            //发送消息ID
+                       &BaseApp_TransID,              //发送消息ID
                        AF_DISCV_ROUTE,                //发送选项
                        AF_DEFAULT_RADIUS )            //最大跳数半径
       == afStatus_SUCCESS )    
   {
+    HAL_TOGGLE_LED3();
   }
   else
   {
-    //HalLedSet(HAL_LED_1,HAL_LED_MODE_ON);
-    // Error occurred in request to send.
+    //发送失败
   }
 }
-
-/*********************************************************************
- * @fn      BaseApp_SendFlashMessage
- *
- * @brief   Send the flash message to group 1.
- *
- * @param   flashTime - in milliseconds
- *
- * @return  none
- */
-void BaseApp_SendFlashMessage( uint16 flashTime )
-{
-  uint8 buffer[3];
-  buffer[0] = (uint8)(BaseAppFlashCounter++);
-  buffer[1] = LO_UINT16( flashTime );
-  buffer[2] = HI_UINT16( flashTime );
-
-  if ( AF_DataRequest( &BaseApp_Flash_DstAddr, &BaseApp_epDesc,
-                       BASEAPP_FLASH_CLUSTERID,
-                       3,
-                       buffer,
-                       &BaseApp_TransID,
-                       AF_DISCV_ROUTE,
-                       AF_DEFAULT_RADIUS ) == afStatus_SUCCESS )
-  {
-  }
-  else
-  {
-    // Error occurred in request to send.
-  }
-}
-
-/*********************************************************************
-*********************************************************************/

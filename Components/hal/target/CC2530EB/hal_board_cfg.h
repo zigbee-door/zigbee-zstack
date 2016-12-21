@@ -135,8 +135,6 @@
   #define LED3_POLARITY     ACTIVE_LOW
 
 #elif defined (BASE)
-
-
   /*À¶µÆ*/
   #define LED1_BV           BV(0)
   #define LED1_SBIT         P1_0

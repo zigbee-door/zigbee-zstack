@@ -1974,7 +1974,8 @@ void ZDO_NetworkFormationConfirmCB( ZStatus_t Status )
   if ( Status == ZSUCCESS )
   {
     // LED on shows Coordinator started
-    HalLedSet ( HAL_LED_3, HAL_LED_MODE_ON );
+    // LED3这里不用
+    //HalLedSet ( HAL_LED_3, HAL_LED_MODE_ON );
 
     // LED off forgets HOLD_AUTO_START
     HalLedSet (HAL_LED_4, HAL_LED_MODE_OFF);
