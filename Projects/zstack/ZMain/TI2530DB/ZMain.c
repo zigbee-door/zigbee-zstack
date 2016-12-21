@@ -35,7 +35,6 @@ static void zmain_lcd_init( void );
 
 int main( void )
 {
-  
   /*1.系统初始化*/
   osal_int_disable( INTS_ALL );   //关操作系统全部中断
   HAL_BOARD_INIT();               //初始化硬件设备，例如CPU的晶振以及LED的引脚输入输出等

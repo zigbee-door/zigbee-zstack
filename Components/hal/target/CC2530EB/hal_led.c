@@ -22,7 +22,7 @@
   its documentation for any purpose.
 
   YOU FURTHER ACKNOWLEDGE AND AGREE THAT THE SOFTWARE AND DOCUMENTATION ARE
-  PROVIDED ìAS ISî WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
+  PROVIDED ìAS IS?WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED,
   INCLUDING WITHOUT LIMITATION, ANY WARRANTY OF MERCHANTABILITY, TITLE,
   NON-INFRINGEMENT AND FITNESS FOR A PARTICULAR PURPOSE. IN NO EVENT SHALL
   TEXAS INSTRUMENTS OR ITS LICENSORS BE LIABLE OR OBLIGATED UNDER CONTRACT,
@@ -145,12 +145,18 @@ uint8 HalLedSet (uint8 leds, uint8 mode)
   {
     case HAL_LED_MODE_BLINK:
       /* Default blink, 1 time, D% duty cycle */
-      HalLedBlink (leds, 1, HAL_LED_DEFAULT_DUTY_CYCLE, HAL_LED_DEFAULT_FLASH_TIME);
+      
+      //’‚¿Ô“≤≤ª÷™µ¿ ≤√¥ ±∫ÚªÿÃ¯≥ˆ¿¥£¨»•µÙ∑¿÷π…¡À∏
+      //HalLedBlink (leds, 1, HAL_LED_DEFAULT_DUTY_CYCLE, HAL_LED_DEFAULT_FLASH_TIME);
       break;
 
     case HAL_LED_MODE_FLASH:
       /* Default flash, N times, D% duty cycle */
+      //’‚¿Ô√≈À¯≥…π¬∂˘…Ë±∏“‘∫Ûª·“ª÷±…¡À∏
+      //’‚¿Ô√≈À¯”¶∏√»•µÙ∑¿÷π…¡À∏
+#ifdef BASE
       HalLedBlink (leds, HAL_LED_DEFAULT_FLASH_COUNT, HAL_LED_DEFAULT_DUTY_CYCLE, HAL_LED_DEFAULT_FLASH_TIME);
+#endif      
       break;
 
     case HAL_LED_MODE_ON:

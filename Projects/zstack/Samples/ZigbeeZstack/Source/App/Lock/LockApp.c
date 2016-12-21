@@ -405,7 +405,7 @@ void LockApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
       
       if((buf[0] == '1') && (buf[1] == '1'))  //判断接收的是否为D1
       {
-        HalLedBlink(HAL_LED_2,0,50,500);      //LED2间隔500ms闪烁
+        //HalLedBlink(HAL_LED_2,0,50,500);      //LED2间隔500ms闪烁
         
         #if defined(ZDO_COORDINATOR)
         HalUARTWrite(0,"CoordinatorEB-Pro 57 Receive '11' OK\n", sizeof("CoordinatorEB-Pro 57 Receive 'D1' OK\n"));//串口发送
@@ -415,7 +415,7 @@ void LockApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
       }
       else
       {
-        HalLedSet(HAL_LED_2,HAL_LED_MODE_ON);
+        //HalLedSet(HAL_LED_2,HAL_LED_MODE_ON);
       }
       break;
 

@@ -214,9 +214,8 @@ uint16 BaseApp_ProcessEvent( uint8 task_id, uint16 events )
   if ( events & BASEAPP_OFF_LINE_TASK_MSG_EVENT )
   {
 
-//    HAL_TOGGLE_LED1();
-//    HAL_TOGGLE_LED2();
-//    HAL_TOGGLE_LED3();
+
+    HAL_TOGGLE_LED3();
     
     
     osal_start_timerEx( BaseApp_TaskID, BASEAPP_OFF_LINE_TASK_MSG_EVENT,  
