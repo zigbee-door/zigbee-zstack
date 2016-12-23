@@ -75,7 +75,9 @@
 /*输入输出簇列表，命令列表*/
 const cId_t LockApp_ClusterList[LOCKAPP_MAX_CLUSTERS] = 
 {
-  BROADCAST_TEST_ID      //广播测试命令    
+  BROADCAST_TEST_ID,      //广播测试命令  
+  SINGLE_TEST_ID,         //终端单播数据测试,门锁1
+  SINGLE_TEST_ID_2        //终端单播数据测试,门锁2   
 };
 
 /*Zigbee简单端点描述符*/
@@ -106,6 +108,7 @@ devStates_t LockApp_NwkState;           //网络状态
 uint8 LockApp_TransID;                  // 传输序列ID
 
 afAddrType_t LockApp_Single_DstAddr;    //发送数据的单播目的地址
+afAddrType_t BaseApp_BroadCast_DstAddr; //发送数据的广播目的地址
 
 aps_Group_t LockApp_Group;              //组信息定义
 
@@ -169,6 +172,11 @@ void LockApp_Init( uint8 task_id )
   LockApp_Single_DstAddr.endPoint = LOCKAPP_ENDPOINT;             //端点号：20
   LockApp_Single_DstAddr.addr.shortAddr = COORDINATOR_ADDR;       //协调器地址
   
+  
+  /*广播设置*/
+  BaseApp_BroadCast_DstAddr.addrMode = (afAddrMode_t)AddrBroadcast;  //15:广播
+  BaseApp_BroadCast_DstAddr.endPoint = LOCKAPP_ENDPOINT;             //端点号：20
+  BaseApp_BroadCast_DstAddr.addr.shortAddr = 0xFFFF;         //广播地址 
  
   /*定义本设备用来通信的APS层端点描述符*/
   LockApp_epDesc.endPoint = LOCKAPP_ENDPOINT;                     //端点号：20
@@ -189,12 +197,6 @@ void LockApp_Init( uint8 task_id )
 }
 
 
-//暂时放在外面，测试方便
-uint8 Status = MFRC522_ERR;     //刷卡结果
-uint8 BlockData[16] = {0x00};   //M1卡扇区数据 
-uint8 DoorId[4] = {0x00};       //门锁ID
-
-
 /*********************************
   Funcname:       LockApp_ProcessEvent
   Description:    任务事件处理函数
@@ -205,6 +207,13 @@ uint16 LockApp_ProcessEvent( uint8 task_id, uint16 events )
 {
   afIncomingMSGPacket_t *MSGpkt;     //接收消息结构体
   (void)task_id;  
+  
+  
+  uint8 Status = MFRC522_ERR;     //刷卡结果
+  uint8 BlockData[16] = {0x00};   //M1卡扇区数据 
+  uint8 DoorId[4] = {0x00};       //门锁ID
+  
+  
 
   if ( events & SYS_EVENT_MSG )      //接收到系统消息
   {
@@ -255,10 +264,7 @@ uint16 LockApp_ProcessEvent( uint8 task_id, uint16 events )
   /*定时事件*/
   if ( events & LOCKAPP_OFF_LINE_TASK_MSG_EVENT )
   {
-    
-    
-
-    
+     
     
     /*1.刷卡授权和开门*/
     Status = Card_ReadBlock(CARD_INFORMATION,BlockData); 
@@ -394,9 +400,6 @@ void LockApp_HandleKeys( uint8 shift, uint8 keys )
 
 
 
-//接收数据函数
-
-uint8 flag=false;
 
 void LockApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
 {
@@ -406,22 +409,26 @@ void LockApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
   //判断接收到的簇ID
   switch ( pkt->clusterId )
   {
-    //广播测试数据命令
-    case BROADCAST_TEST_ID:    
-      
-      if((pkt->cmd.Data[0] == 0x31) && (pkt->cmd.Data[1] == 0x34)) 
-      {
-        //Buzzer_One();
-        if(!flag) {
-          HAL_TURN_ON_LED1();
-          flag = true;
-        } else {
-          HAL_TURN_OFF_LED1();
-          flag = false;
-        }
-      }
-
-      break;
+//    //广播测试数据命令
+//    case BROADCAST_TEST_ID:    
+//      
+//      if((pkt->cmd.Data[0] == 0x31) && (pkt->cmd.Data[1] == 0x34)) 
+//      {
+//        
+//        //收到信息后反馈终端设备的广播信息,这里使用单播模式
+//        LockApp_SendMessage(&LockApp_Single_DstAddr,SendData,2,SINGLE_TEST_ID); 
+//
+//        //Buzzer_One();
+//        if(!flag) {
+//          HAL_TURN_ON_LED1();
+//          flag = true;
+//        } else {
+//          HAL_TURN_OFF_LED1();
+//          flag = false;
+//        }
+//      }
+//
+//      break;
 
   }
 }
@@ -443,8 +450,7 @@ void LockApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
 *********************************/
 void LockApp_SendMessage(afAddrType_t *DstAddr, uint8 *SendData, uint8 len, uint8 Cmd)
 {
-  
-  //调用AF_DataRequest将数据无线广播出去
+ 
   if ( AF_DataRequest( //&BaseApp_Periodic_DstAddr,   //目的节点的地址信息
                        DstAddr,
                        &LockApp_epDesc,               //端点信息

@@ -148,7 +148,9 @@
  * ------------------------------------------------------------------------------------------------
  */
 #define MAC_RADIO_CHANNEL_DEFAULT               11      //默认是11信道
-#define MAC_RADIO_TX_POWER_DEFAULT              0x32
+//#define MAC_RADIO_TX_POWER_DEFAULT              0x32    //默认设置在-16dbm~-17dbm之间
+#define MAC_RADIO_TX_POWER_DEFAULT              0x35    //设置为-16dBm
+
 
 #define MAC_RADIO_RECEIVER_SENSITIVITY_DBM      -91 /* dBm */
 #define MAC_RADIO_RECEIVER_SATURATION_DBM       10  /* dBm */

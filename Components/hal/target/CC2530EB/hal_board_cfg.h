@@ -490,7 +490,7 @@ st( \
 #endif
 
 
-#ifdef LOCK             //如果是基站
+#ifdef BASE             //如果是基站
   #if HAL_UART
   // Always prefer to use DMA over ISR.
   #if HAL_DMA

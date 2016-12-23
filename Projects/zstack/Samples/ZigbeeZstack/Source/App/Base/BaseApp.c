@@ -54,6 +54,10 @@
 #include "MT_APP.h"
 #include "MT.h"
 
+#include <stdio.h>
+
+#include "dri_delay.h"
+
 
 /*********************************************************************
  * 全局变量
@@ -62,7 +66,9 @@
 /*输入输出簇列表，命令列表*/
 const cId_t BaseApp_ClusterList[BASEAPP_MAX_CLUSTERS] = 
 {
-  BROADCAST_TEST_ID      //广播测试命令    
+  BROADCAST_TEST_ID,      //广播测试命令  
+  SINGLE_TEST_ID,         //终端单播数据测试,门锁1
+  SINGLE_TEST_ID_2        //终端单播数据测试,门锁2    
 };
 
 /*Zigbee简单端点描述符*/
@@ -129,6 +135,12 @@ void BaseApp_Init( uint8 task_id )
   BaseApp_NwkState = DEV_INIT;      //网络状态初始化为DEV_INIT
   BaseApp_TransID = 0;              //传输序列ID  
   
+  //------------------------配置串口---------------------------------
+  MT_UartInit();                    //串口初始化
+  MT_UartRegisterTaskID(task_id);   //注册串口任务
+  HalUARTWrite(0,"UartInit OK\n", sizeof("UartInit OK\n"));
+  
+  
   
   /*单播设置*/  
   BaseApp_Single_DstAddr.addrMode = (afAddrMode_t)Addr16Bit;        //3:单播
@@ -160,9 +172,7 @@ void BaseApp_Init( uint8 task_id )
 }
 
 
-
-
-
+//uint8 sendNum = 0;
 
 /*********************************
   Funcname:       BaseApp_ProcessEvent
@@ -220,16 +230,7 @@ uint16 BaseApp_ProcessEvent( uint8 task_id, uint16 events )
   if ( events & BASEAPP_OFF_LINE_TASK_MSG_EVENT )
   {
 
-
-    //HAL_TOGGLE_LED2();
-    uint8 data[2] = {0x31,0x34};
-    
-    BaseApp_SendMessage(&BaseApp_BroadCast_DstAddr,   //广播目的地址
-                        data,                         //数据
-                        2,
-                        BROADCAST_TEST_ID             //广播测试命令
-    );
-    
+    HAL_TOGGLE_LED3();
     
     osal_start_timerEx( BaseApp_TaskID, BASEAPP_OFF_LINE_TASK_MSG_EVENT,  
         (BASEAPP_OFF_LINE_TASK_MSG_TIMEOUT + (osal_rand() & 0x00FF)) );
@@ -264,16 +265,22 @@ uint16 BaseApp_ProcessEvent( uint8 task_id, uint16 events )
 //接收数据函数
 void BaseApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
 {
-  uint16 flashTime;
-  byte buf[3];
+
 
   //判断接收到的簇ID
   switch ( pkt->clusterId )
   {
-    //广播测试命令
+    //广播测试命令,门锁1
     case BROADCAST_TEST_ID: 
       break;
-
+      
+    //单播测试命令,门锁1
+    case SINGLE_TEST_ID:
+      break;
+      
+    //单播测试命令,门锁2
+    case SINGLE_TEST_ID_2:
+      break;
   }
 }
 
@@ -294,7 +301,6 @@ void BaseApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
 void BaseApp_SendMessage(afAddrType_t *DstAddr, uint8 *SendData, uint8 len, uint8 Cmd)
 {
   
-  //调用AF_DataRequest将数据无线广播出去
   if ( AF_DataRequest( //&BaseApp_Periodic_DstAddr,   //目的节点的地址信息
                        DstAddr,
                        &BaseApp_epDesc,               //端点信息
@@ -306,10 +312,10 @@ void BaseApp_SendMessage(afAddrType_t *DstAddr, uint8 *SendData, uint8 len, uint
                        AF_DEFAULT_RADIUS )            //最大跳数半径
       == afStatus_SUCCESS )    
   {
-    HAL_TOGGLE_LED3();
+    HAL_TOGGLE_LED2();
   }
   else
   {
-    //发送失败
+    
   }
 }
