@@ -472,14 +472,24 @@ st( \
 
 
 #ifdef BASE             //如果是基站，就开启UART
-  #ifndef HAL_UART
-  #if (defined ZAPP_P1) || (defined ZAPP_P2) || (defined ZTOOL_P1) || (defined ZTOOL_P2)
-  #define HAL_UART TRUE
-  #else
-  #define HAL_UART TRUE
+  #ifdef BASE_UART      //如果使用了BASE_UART，则使用自带的uart,否则使用z-stack的uart
+
+    #define HAL_UART FALSE
+
+  #else                 //使用z-stack的uart
+
+    #ifndef HAL_UART
+    #if (defined ZAPP_P1) || (defined ZAPP_P2) || (defined ZTOOL_P1) || (defined ZTOOL_P2)
+    #define HAL_UART TRUE
+    #else
+    #define HAL_UART TRUE
+    #endif
+    #endif
+
   #endif
-  #endif
+
 #else                   //如果是门锁，就关闭UART，因为刷卡的时候可能会死循环在HAL_UART_DMA中
+
   #ifndef HAL_UART
   #if (defined ZAPP_P1) || (defined ZAPP_P2) || (defined ZTOOL_P1) || (defined ZTOOL_P2)
   #define HAL_UART FLASE
@@ -487,6 +497,7 @@ st( \
   #define HAL_UART FALSE
   #endif
   #endif
+
 #endif
 
 

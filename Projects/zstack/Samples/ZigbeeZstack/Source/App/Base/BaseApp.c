@@ -57,6 +57,9 @@
 #include <stdio.h>
 
 #include "dri_delay.h"
+#include "dri_uart.h"
+#include "dri_iport.h"
+#include "app_tcp.h"
 
 
 /*********************************************************************
@@ -116,7 +119,7 @@ uint8 BaseAppFlashCounter = 0;
 typedef struct
 {
   //associated_devices_t AssociatedDevList[21];   z-stack的关联表
-  uint8 DoorId[NWK_MAX_DEVICES];      //每把门锁对应一个房间ID
+  uint32 DoorId[NWK_MAX_DEVICES];      //每把门锁对应一个房间ID
   uint8 BatteryInfo[NWK_MAX_DEVICES]; //0bit: 1->节点网络存活 0->节点网络失效 1~7bit: 电池百分比
 } associate_t;
 
@@ -151,12 +154,10 @@ void BaseApp_Init( uint8 task_id )
   BaseApp_NwkState = DEV_INIT;      //网络状态初始化为DEV_INIT
   BaseApp_TransID = 0;              //传输序列ID  
   
-  //------------------------配置串口---------------------------------
-  MT_UartInit();                    //串口初始化
-  MT_UartRegisterTaskID(task_id);   //注册串口任务
-  HalUARTWrite(0,"UartInit OK\n", sizeof("UartInit OK\n"));
-  
-  
+  /*Drivers驱动初始化*/
+  Uart0_Init();                     //uart0初始化
+  Iport_Init();                     //iport初始化
+  Tcp_Init();                       //uart接受变量初始化
   
   /*单播设置*/  
   BaseApp_Single_DstAddr.addrMode = (afAddrMode_t)Addr16Bit;        //3:单播
@@ -247,7 +248,7 @@ uint16 BaseApp_ProcessEvent( uint8 task_id, uint16 events )
   /*定时事件*/
   if ( events & BASEAPP_OFF_LINE_TASK_MSG_EVENT )
   {
-//    uint8 data[2] = {0x44,0x45};
+    uint8 data[2] = {0x44,0x45};
 //    uint8 data2[2] = {0x44,0x46};
 //    
 //    
@@ -263,8 +264,8 @@ uint16 BaseApp_ProcessEvent( uint8 task_id, uint16 events )
 //      BaseApp_Single_DstAddr.addr.shortAddr = AssociatedDevList[1].shortAddr;
 //      BaseApp_SendMessage(&BaseApp_Single_DstAddr,data2,2,SINGLE_TEST_ID_3);
 //    }
-
-
+    
+  
     osal_start_timerEx( BaseApp_TaskID, BASEAPP_OFF_LINE_TASK_MSG_EVENT,  
         (BASEAPP_OFF_LINE_TASK_MSG_TIMEOUT + (osal_rand() & 0x00FF)) );
 
@@ -345,7 +346,7 @@ void BaseApp_SendMessage(afAddrType_t *DstAddr, uint8 *SendData, uint8 len, uint
                        AF_DEFAULT_RADIUS )            //最大跳数半径
       == afStatus_SUCCESS )    
   {
-    HAL_TOGGLE_LED2();
+    HAL_TOGGLE_LED1();
   }
   else
   {
