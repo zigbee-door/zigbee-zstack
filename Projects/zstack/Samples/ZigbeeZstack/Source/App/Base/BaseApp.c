@@ -66,9 +66,10 @@
 /*输入输出簇列表，命令列表*/
 const cId_t BaseApp_ClusterList[BASEAPP_MAX_CLUSTERS] = 
 {
-  BROADCAST_TEST_ID,      //广播测试命令  
+  BROADCAST_TEST_ID,      //协调器广播测试命令
   SINGLE_TEST_ID,         //终端单播数据测试,门锁1
-  SINGLE_TEST_ID_2        //终端单播数据测试,门锁2    
+  SINGLE_TEST_ID_2,       //终端单播数据测试,门锁2    
+  SINGLE_TEST_ID_3        //协调器单播数据给门锁测试
 };
 
 /*Zigbee简单端点描述符*/
@@ -106,13 +107,28 @@ aps_Group_t BaseApp_Group;              //组信息定义
 uint8 BaseAppPeriodicCounter = 0;       //发送次数统计
 uint8 BaseAppFlashCounter = 0;
 
+
+
+/*********************************************************************
+ * 关联表
+ */
+
+typedef struct
+{
+  //associated_devices_t AssociatedDevList[21];   z-stack的关联表
+  uint8 DoorId[NWK_MAX_DEVICES];      //每把门锁对应一个房间ID
+  uint8 BatteryInfo[NWK_MAX_DEVICES]; //0bit: 1->节点网络存活 0->节点网络失效 1~7bit: 电池百分比
+} associate_t;
+
+associate_t associateList;      
+
+
+
 /*********************************************************************
  * 本地函数
  */
 void BaseApp_HandleKeys( uint8 shift, uint8 keys ); 
 void BaseApp_MessageMSGCB( afIncomingMSGPacket_t *pckt );
-
-
 void BaseApp_SendMessage(afAddrType_t *DstAddr, uint8 *SendData, uint8 len, uint8 Cmd);  //基站发送命令给门锁的函数
 
 
@@ -203,10 +219,12 @@ uint16 BaseApp_ProcessEvent( uint8 task_id, uint16 events )
         case ZDO_STATE_CHANGE:
           BaseApp_NwkState = (devStates_t)(MSGpkt->hdr.status);//获取设备当前状态
           
-          if ( (BaseApp_NwkState == DEV_ZB_COORD)
-              || (BaseApp_NwkState == DEV_ROUTER)
-              || (BaseApp_NwkState == DEV_END_DEVICE) )
-          {
+          if (BaseApp_NwkState == DEV_ZB_COORD)
+              //|| (BaseApp_NwkState == DEV_ROUTER)
+              //|| (BaseApp_NwkState == DEV_END_DEVICE) )
+          {           
+            //HAL_TOGGLE_LED1();   
+            //HalUARTWrite(0,"State Change OK\n", sizeof("State Change OK\n"));
             //设备组网成功
           }
           else
@@ -229,9 +247,24 @@ uint16 BaseApp_ProcessEvent( uint8 task_id, uint16 events )
   /*定时事件*/
   if ( events & BASEAPP_OFF_LINE_TASK_MSG_EVENT )
   {
+//    uint8 data[2] = {0x44,0x45};
+//    uint8 data2[2] = {0x44,0x46};
+//    
+//    
+//    //设备1先连上
+//    if(AssociatedDevList[0].shortAddr != 0xFFFF) 
+//    {
+//      BaseApp_Single_DstAddr.addr.shortAddr = AssociatedDevList[0].shortAddr;
+//      BaseApp_SendMessage(&BaseApp_Single_DstAddr,data,2,SINGLE_TEST_ID_3);
+//    } 
+//   
+//    if(AssociatedDevList[1].shortAddr != 0xFFFF)
+//    {
+//      BaseApp_Single_DstAddr.addr.shortAddr = AssociatedDevList[1].shortAddr;
+//      BaseApp_SendMessage(&BaseApp_Single_DstAddr,data2,2,SINGLE_TEST_ID_3);
+//    }
 
-    HAL_TOGGLE_LED3();
-    
+
     osal_start_timerEx( BaseApp_TaskID, BASEAPP_OFF_LINE_TASK_MSG_EVENT,  
         (BASEAPP_OFF_LINE_TASK_MSG_TIMEOUT + (osal_rand() & 0x00FF)) );
 

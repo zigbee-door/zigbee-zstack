@@ -75,9 +75,10 @@
 /*输入输出簇列表，命令列表*/
 const cId_t LockApp_ClusterList[LOCKAPP_MAX_CLUSTERS] = 
 {
-  BROADCAST_TEST_ID,      //广播测试命令  
+  BROADCAST_TEST_ID,      //协调器广播测试命令
   SINGLE_TEST_ID,         //终端单播数据测试,门锁1
-  SINGLE_TEST_ID_2        //终端单播数据测试,门锁2   
+  SINGLE_TEST_ID_2,       //终端单播数据测试,门锁2    
+  SINGLE_TEST_ID_3        //协调器单播数据给门锁测试 
 };
 
 /*Zigbee简单端点描述符*/
@@ -429,6 +430,18 @@ void LockApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
 //      }
 //
 //      break;
+    
+    case SINGLE_TEST_ID_3:
+      if((pkt->cmd.Data[0] == 0x44) && (pkt->cmd.Data[1] == 0x46)) 
+      {
+        //Buzzer_Two();
+        HAL_TOGGLE_LED1();
+      }
+     
+      break;
+    
+    
+    
 
   }
 }

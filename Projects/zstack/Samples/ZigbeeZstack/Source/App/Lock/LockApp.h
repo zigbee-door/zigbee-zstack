@@ -29,7 +29,7 @@ extern "C"
 #define LOCKAPP_DEVICEID           0x0001     //设备ID
 #define LOCKAPP_DEVICE_VERSION     0          //设备版本号
 #define LOCKAPP_FLAGS              0          //保留  
-#define LOCKAPP_MAX_CLUSTERS       3          //最大输入/输出命令（簇）个数
+#define LOCKAPP_MAX_CLUSTERS       4          //最大输入/输出命令（簇）个数
   
   
   
@@ -37,9 +37,11 @@ extern "C"
 
 
 /*命令类型（簇ID）*/
-#define BROADCAST_TEST_ID           0x01      //广播测试命令
-#define SINGLE_TEST_ID              0x02      //终端单播数据测试,门锁1
-#define SINGLE_TEST_ID_2            0x03      //终端单播数据测试,门锁2
+#define BROADCAST_TEST_ID   0x01          //协调器广播测试命令
+#define SINGLE_TEST_ID      0x02          //终端单播数据测试,门锁1
+#define SINGLE_TEST_ID_2    0x03          //终端单播数据测试,门锁2
+#define SINGLE_TEST_ID_3    0x04          //协调器单播数据给基站测试
+  
 
 
 
