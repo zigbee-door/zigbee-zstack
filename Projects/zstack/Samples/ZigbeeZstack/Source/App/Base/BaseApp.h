@@ -45,8 +45,11 @@ extern "C"
   
 /*基站定时任务（暂时没用）*/
 #define BASEAPP_OFF_LINE_TASK_MSG_TIMEOUT   2000    //基站离线任务
-#define BASEAPP_OFF_LINE_TASK_MSG_EVENT     0x0001  //基站离线任务定时事件标志
   
+#define BASEAPP_OFF_LINE_TASK_MSG_EVENT     0x0001  //基站离线任务定时事件标志
+#define BASEAPP_TCP_RECEIVE_ERR_MSG_EVENT   0x0002  //基站接收上位机数据帧错误,暂时没用
+#define BASEAPP_TCP_RECEIVE_TRUE_MSG_EVENT  0x0004  //基站接收上位机数据帧正确  
+//#define BASEAPP_TCP_RECEIVE_ERR_MSG_EVENT   0x0004  //事件编号在一个任务中必须是唯一的，而且必须是通过左移1位的方式来实现  
 
 /*广播地址*/
 #define BROADCAST_ADDR            0xFFFF  

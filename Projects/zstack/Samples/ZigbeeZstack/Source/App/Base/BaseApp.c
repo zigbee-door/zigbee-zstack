@@ -6,35 +6,6 @@
   Author:         zhuxiankang
 **************************************************************************************************/
 
-
-/**************************************************************************************************
-  Description:    端口配置说明
-  1.LED                     ->              P1_5      普通IO口，设置为输出
-
-  2.KEY                     ->   钥匙开门   P0_1      普通IO口，设置为上拉、输入，下降沿触发中断 
-                                 锁扣       P0_4      普通IO口，设置为上拉、输入，下降沿触发中断
-                                 门反锁     P0_5      普通IO口，设置为上拉、输入
-
-  3.BUZZER                  ->   蜂鸣器     P2_0      普通IO口，设置为上拉、输出，默认高电平   
-
-  4.MOTOR                   ->   H桥上桥    P0_6 P0_7 普通IO口，设置为输出，低电平有效
-                                 H桥下桥    P1_0 P1_1 普通IO口，设置为输出，高电平有效
-
-  5.I2C                     ->   SCL        P1_3      普通IO口，设置为输出
-                                 SDA        P1_2      普通IO口，可能输出也可能输出
- 
-  6.MFRC522                 ->   CS(SPI)    P1_2      普通IO口，设置为输出
-                                 SCK(SPI)   P1_3      普通IO口，设置为输出
-                                 MOSI(SPI)  P0_2      普通IO口，设置为输出
-                                 MISO(SPI)  P0_3      普通IO口，设置为输入
-                                 RST        P1_7      普通IO口，设置为输出
-
-
-**************************************************************************************************/
-
-
-
-
 #include "OSAL.h"
 #include "ZGlobals.h"
 #include "AF.h"
@@ -118,9 +89,12 @@ uint8 BaseAppFlashCounter = 0;
 
 typedef struct
 {
-  //associated_devices_t AssociatedDevList[21];   z-stack的关联表
-  uint32 DoorId[NWK_MAX_DEVICES];      //每把门锁对应一个房间ID
-  uint8 BatteryInfo[NWK_MAX_DEVICES]; //0bit: 1->节点网络存活 0->节点网络失效 1~7bit: 电池百分比
+  uint8 extAddr[8];   //MAC地址
+  uint16 doorId;      //门锁ID
+  
+  
+  
+  
 } associate_t;
 
 associate_t associateList;      
@@ -202,7 +176,8 @@ uint16 BaseApp_ProcessEvent( uint8 task_id, uint16 events )
   afIncomingMSGPacket_t *MSGpkt;     //接收消息结构体
   (void)task_id;  
 
-  if ( events & SYS_EVENT_MSG )      //接收到系统消息
+  /*1. 系统消息事件*/
+  if ( events & SYS_EVENT_MSG )     
   {
     MSGpkt = (afIncomingMSGPacket_t *)osal_msg_receive( BaseApp_TaskID ); //调用系统信息，接收消息包
     
@@ -245,10 +220,10 @@ uint16 BaseApp_ProcessEvent( uint8 task_id, uint16 events )
     return (events ^ SYS_EVENT_MSG);                  //返回未处理的事件
   }
 
-  /*定时事件*/
+  /*2. 定时事件*/
   if ( events & BASEAPP_OFF_LINE_TASK_MSG_EVENT )
   {
-    uint8 data[2] = {0x44,0x45};
+//    uint8 data[2] = {0x44,0x45};
 //    uint8 data2[2] = {0x44,0x46};
 //    
 //    
@@ -272,6 +247,55 @@ uint16 BaseApp_ProcessEvent( uint8 task_id, uint16 events )
 
     return (events ^ BASEAPP_OFF_LINE_TASK_MSG_EVENT);  //返回未处理的事件
   }
+  
+  
+  /*3. 接收上位机数据帧错误事件*/
+  if ( events & BASEAPP_TCP_RECEIVE_ERR_MSG_EVENT )
+  {
+    
+    //HAL_TURN_ON_LED2();
+    
+    return (events ^ BASEAPP_TCP_RECEIVE_ERR_MSG_EVENT);  //返回未处理的事件
+  }
+  
+  /*4. 接收上位机命令事件*/
+  if ( events & BASEAPP_TCP_RECEIVE_TRUE_MSG_EVENT )
+  {
+    uint8 data[Rx_BUFF] = {0x00};
+    uint8 cmd = Frame.CMD;
+    uint8 doorId[2] = {Frame.DOOR_ID[0],Frame.DOOR_ID[1]};
+    
+    if(Frame.LENG - MIN_LENG)
+    {
+      //memset(data,Frame.DATA,Frame.LENG - MIN_LENG);
+      strncpy(data,Frame.DATA,Frame.LENG - MIN_LENG);
+    }
+    
+    Tcp_Init();             //先让接收使能在处理命令，也可以先处理命令再接收使能？
+    
+    switch(cmd) 
+    {
+      
+      /*1. 获取基站的关联列表 */
+      case BASE_CMD_GET_ASSOCLIST:  
+        HAL_TOGGLE_LED1();
+        break;
+          
+      default:
+        break;
+    }
+    
+    
+    
+    
+    
+    
+
+    return (events ^ BASEAPP_TCP_RECEIVE_TRUE_MSG_EVENT);  //返回未处理的事件
+  }
+  
+  
+  
 
   return 0;
 }
