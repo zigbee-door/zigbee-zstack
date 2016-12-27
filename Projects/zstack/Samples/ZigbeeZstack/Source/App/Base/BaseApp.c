@@ -264,6 +264,7 @@ uint16 BaseApp_ProcessEvent( uint8 task_id, uint16 events )
     uint8 data[Rx_BUFF] = {0x00};
     uint8 cmd = Frame.CMD;
     uint8 doorId[2] = {Frame.DOOR_ID[0],Frame.DOOR_ID[1]};
+    uint8 i=0;
     
     if(Frame.LENG - MIN_LENG)
     {
@@ -278,7 +279,20 @@ uint16 BaseApp_ProcessEvent( uint8 task_id, uint16 events )
       
       /*1. 获取基站的关联列表 */
       case BASE_CMD_GET_ASSOCLIST:  
-        HAL_TOGGLE_LED1();
+        
+        for(i=0;i<NWK_MAX_DEVICES;i++) 
+        {
+          if(AssociatedDevList[i].shortAddr != 0xFFFF) { //也可能不是FFFF，这里需要注意
+            data[i] = AssociatedDevList[i].shortAddr & 0xFF;
+            data[i+1] = (AssociatedDevList[i].shortAddr >> 8) & 0xFF;
+          } 
+          else
+          {
+            break;    //如果等于就跳出循环
+          }
+        }
+        
+        
         break;
           
       default:
@@ -287,8 +301,7 @@ uint16 BaseApp_ProcessEvent( uint8 task_id, uint16 events )
     
     
     
-    
-    
+    HAL_TOGGLE_LED1();      //反转LED灯指示
     
 
     return (events ^ BASEAPP_TCP_RECEIVE_TRUE_MSG_EVENT);  //返回未处理的事件
