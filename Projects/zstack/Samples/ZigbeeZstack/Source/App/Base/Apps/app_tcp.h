@@ -110,15 +110,16 @@ TCP_C_Extern Typedef_Frame Frame;      //当前文件和BaseApp.c是全局变量
 
 //反馈状态
 #define BASE_RESP_OK            0xEE        //操作成功
-//#define BASE_RESP_SOP_ERR       0x10        //帧头错误
-//#define BASE_RESP_SEQ_ERR       0x11        //帧序列错误
-//#define BASE_START_DEV_ERR      0x12        //起始设备识别错误
-//#define BASE_END_DEV_ERR        0x13        //目标设备识别错误
+
+
+//帧错误反馈
 #define BASE_RESP_LENG_ERR      0x10        //接收数据帧不完整
 #define BASE_RESP_CMD_ERR       0x11        //命令字未知
 #define BASE_RESP_LRC_ERR       0x12        //LRC校验错误
 #define BASE_RESP_EOP_ERR       0x13        //帧尾错误
 
+//命令类型反馈
+#define BASE_RESP_NO_DOOR_LIST  0x20        //没有门锁关联列表信息
 
 
 

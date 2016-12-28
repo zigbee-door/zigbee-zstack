@@ -283,17 +283,29 @@ uint16 BaseApp_ProcessEvent( uint8 task_id, uint16 events )
         for(i=0;i<NWK_MAX_DEVICES;i++) 
         {
           if(AssociatedDevList[i].shortAddr != 0xFFFF) { //也可能不是FFFF，这里需要注意
-            data[i] = AssociatedDevList[i].shortAddr & 0xFF;
-            data[i+1] = (AssociatedDevList[i].shortAddr >> 8) & 0xFF;
+            data[2*i] = AssociatedDevList[i].shortAddr & 0xFF;
+            data[2*i+1] = (AssociatedDevList[i].shortAddr >> 8) & 0xFF;
           } 
           else
-          {
-            break;    //如果等于就跳出循环
+          { 
+            /*有门锁列表信息*/
+            if(i)
+            {
+              Tcp_Send(BASE_CMD_GET_ASSOCLIST,doorId,BASE_RESP_OK,data,2*i);           //发送信息给上位机
+            }
+            /*无门锁列表信息*/
+            else 
+            {
+              Tcp_Send(BASE_CMD_GET_ASSOCLIST,doorId,BASE_RESP_NO_DOOR_LIST,data,i);   //无门锁列表信息
+            }
+            
+            break;                                                                     //如果等于就跳出循环
           }
         }
         
         
-        break;
+     
+        break;        
           
       default:
         break;
