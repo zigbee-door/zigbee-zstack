@@ -98,16 +98,16 @@ uint8 Data_CommonCard_Init(void)
  *******************************************
  */
 
-
+  uint8 data[4] = {0x00};
 void Data_DoorID_Init(void)
 {
-  uint8 data[4] = {0x00};
+
   
   uint8 Data[4] = {DOOR_COMPANY,DOOR_BUILD,DOOR_FLOOR,DOOR_ID};
   AT24C256_WriteBuff(AT24C256_WRITE_ADDR,DOORID_BASE_ADDR,Data,4);
   Delay_Ms(100);
-  AT24C256_ReadBuff(AT24C256_WRITE_ADDR,DOORID_BASE_ADDR,data,4);
-  Delay_Ms(100);
+//  AT24C256_ReadBuff(AT24C256_WRITE_ADDR,DOORID_BASE_ADDR,data,4);
+//  Delay_Ms(100);
 }
 
 

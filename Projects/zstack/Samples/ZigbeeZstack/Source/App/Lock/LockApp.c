@@ -75,10 +75,13 @@
 /*输入输出簇列表，命令列表*/
 const cId_t LockApp_ClusterList[LOCKAPP_MAX_CLUSTERS] = 
 {
-  BROADCAST_TEST_ID,      //协调器广播测试命令
-  SINGLE_TEST_ID,         //终端单播数据测试,门锁1
-  SINGLE_TEST_ID_2,       //终端单播数据测试,门锁2    
-  SINGLE_TEST_ID_3        //协调器单播数据给门锁测试 
+//  BROADCAST_TEST_ID,      //协调器广播测试命令
+//  SINGLE_TEST_ID,         //终端单播数据测试,门锁1
+//  SINGLE_TEST_ID_2,       //终端单播数据测试,门锁2    
+//  SINGLE_TEST_ID_3        //协调器单播数据给门锁测试 
+    OPEN_DOOR_CMD_ID          //远程开门
+  
+  
 };
 
 /*Zigbee简单端点描述符*/
@@ -159,7 +162,7 @@ void LockApp_Init( uint8 task_id )
   
   
   /*AppsH应用初始化*/
-  //Data_DoorID_Init();               //门锁ID信息初始化，测试用
+  Data_DoorID_Init();               //门锁ID信息初始化，测试用
   Data_CommonCard_Init();           //普通卡列表初始化，测试用，最后可以远程控制，烧写的时候只需要一遍 
  
   
@@ -406,6 +409,8 @@ void LockApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
 {
   
 //  byte buf[3];
+  
+  uint8 SendData[RF_MAX_BUFF];
 
   //判断接收到的簇ID
   switch ( pkt->clusterId )
@@ -431,14 +436,22 @@ void LockApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
 //
 //      break;
     
-    case SINGLE_TEST_ID_3:
-      if((pkt->cmd.Data[0] == 0x44) && (pkt->cmd.Data[1] == 0x46)) 
-      {
-        //Buzzer_Two();
-        HAL_TOGGLE_LED1();
-      }
-     
-      break;
+//    case SINGLE_TEST_ID_3:
+//      if((pkt->cmd.Data[0] == 0x44) && (pkt->cmd.Data[1] == 0x46)) 
+//      {
+//        //Buzzer_Two();
+//        HAL_TOGGLE_LED1();
+//      }
+    
+    
+      /*远程开门命令*/
+      case OPEN_DOOR_CMD_ID:
+        
+        LockApp_SendMessage(&LockApp_Single_DstAddr,SendData,0,OPEN_DOOR_CMD_ID);   //反馈给基站已经收到命令
+        Door_Open_Close();   
+        
+        
+        break;
     
     
     

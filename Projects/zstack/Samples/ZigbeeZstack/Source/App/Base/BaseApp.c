@@ -40,10 +40,12 @@
 /*输入输出簇列表，命令列表*/
 const cId_t BaseApp_ClusterList[BASEAPP_MAX_CLUSTERS] = 
 {
-  BROADCAST_TEST_ID,      //协调器广播测试命令
-  SINGLE_TEST_ID,         //终端单播数据测试,门锁1
-  SINGLE_TEST_ID_2,       //终端单播数据测试,门锁2    
-  SINGLE_TEST_ID_3        //协调器单播数据给门锁测试
+//  BROADCAST_TEST_ID,      //协调器广播测试命令
+//  SINGLE_TEST_ID,         //终端单播数据测试,门锁1
+//  SINGLE_TEST_ID_2,       //终端单播数据测试,门锁2    
+//  SINGLE_TEST_ID_3        //协调器单播数据给门锁测试
+  OPEN_DOOR_CMD_ID          //远程开门
+  
 };
 
 /*Zigbee简单端点描述符*/
@@ -296,16 +298,26 @@ uint16 BaseApp_ProcessEvent( uint8 task_id, uint16 events )
             /*无门锁列表信息*/
             else 
             {
-              Tcp_Send(BASE_CMD_GET_ASSOCLIST,doorId,BASE_RESP_NO_DOOR_LIST,data,i);   //无门锁列表信息
+              Tcp_Send(BASE_CMD_GET_ASSOCLIST,doorId,BASE_RESP_OK,data,i);   //无门锁列表信息
             }
             
             break;                                                                     //如果等于就跳出循环
           }
         }
         
+        break;      
         
-     
-        break;        
+        
+      /*2. 远程开门 */
+      case BASE_CMD_OPEN_DOOR:  
+        
+        BaseApp_Single_DstAddr.addr.shortAddr = doorId[0] | (doorId[1] << 8);
+        BaseApp_SendMessage(&BaseApp_Single_DstAddr,data,0,OPEN_DOOR_CMD_ID);
+        
+        
+        break;
+        
+        
           
       default:
         break;
@@ -346,24 +358,38 @@ uint16 BaseApp_ProcessEvent( uint8 task_id, uint16 events )
  */
 
 //接收数据函数
+
+
+
 void BaseApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
 {
-
+  uint8 SendData[RF_MAX_BUFF];
+  uint8 doorId[2] = {0x00};
 
   //判断接收到的簇ID
   switch ( pkt->clusterId )
   {
-    //广播测试命令,门锁1
-    case BROADCAST_TEST_ID: 
+    case OPEN_DOOR_CMD_ID:
+      
+      doorId[0] =  pkt->srcAddr.addr.shortAddr & 0xFF;
+      doorId[1] =  (pkt->srcAddr.addr.shortAddr >> 8) & 0xFF;
+      Tcp_Send(BASE_CMD_OPEN_DOOR,doorId,BASE_RESP_OK,SendData,0);
+      
       break;
       
-    //单播测试命令,门锁1
-    case SINGLE_TEST_ID:
-      break;
-      
-    //单播测试命令,门锁2
-    case SINGLE_TEST_ID_2:
-      break;
+    
+    
+//    //广播测试命令,门锁1
+//    case BROADCAST_TEST_ID: 
+//      break;
+//      
+//    //单播测试命令,门锁1
+//    case SINGLE_TEST_ID:
+//      break;
+//      
+//    //单播测试命令,门锁2
+//    case SINGLE_TEST_ID_2:
+//      break;
   }
 }
 

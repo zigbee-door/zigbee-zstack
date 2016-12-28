@@ -29,7 +29,7 @@ extern "C"
 #define BASEAPP_DEVICEID           0x0001     //设备ID
 #define BASEAPP_DEVICE_VERSION     0          //设备版本号
 #define BASEAPP_FLAGS              0          //保留
-#define BASEAPP_MAX_CLUSTERS       4          //最大输入/输出命令（簇）个数
+#define BASEAPP_MAX_CLUSTERS       1          //最大输入/输出命令（簇）个数
   
   
   
@@ -37,10 +37,12 @@ extern "C"
 
 
 /*命令类型（簇ID）*/
-#define BROADCAST_TEST_ID   0x01          //协调器广播测试命令
-#define SINGLE_TEST_ID      0x02          //终端单播数据测试,门锁1
-#define SINGLE_TEST_ID_2    0x03          //终端单播数据测试,门锁2
-#define SINGLE_TEST_ID_3    0x04          //协调器单播数据给门锁测试
+//#define BROADCAST_TEST_ID   0x01          //协调器广播测试命令
+//#define SINGLE_TEST_ID      0x02          //终端单播数据测试,门锁1
+//#define SINGLE_TEST_ID_2    0x03          //终端单播数据测试,门锁2
+//#define SINGLE_TEST_ID_3    0x04          //协调器单播数据给门锁测试
+#define OPEN_DOOR_CMD_ID         0x01       //远程开门  
+  
   
   
 /*基站定时任务（暂时没用）*/
@@ -58,7 +60,8 @@ extern "C"
 // Flash Command Duration - in milliseconds
 #define BASEAPP_FLASH_DURATION               1000
   
-  
+/*射频最大发送和接收数据量*/
+#define RF_MAX_BUFF         0xFF   
   
 /*********************************************************************
  * 函数声明

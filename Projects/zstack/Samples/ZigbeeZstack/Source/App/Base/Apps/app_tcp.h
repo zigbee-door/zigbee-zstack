@@ -97,7 +97,7 @@ TCP_C_Extern Typedef_Frame Frame;      //当前文件和BaseApp.c是全局变量
 #define FPB_MIN_LENG            0x04    //上位机接收数据帧的最小长度
 
 /*数据帧的当前最大命令数*/
-#define MAX_CMD                 0x01    //命令逐1增加
+#define MAX_CMD                 0x02    //命令逐1增加
 
 
 /****************************************命令类型宏定义******************************************/
@@ -105,6 +105,7 @@ TCP_C_Extern Typedef_Frame Frame;      //当前文件和BaseApp.c是全局变量
 //命令类型
 #define BASE_CMD_INIT                 0x00        //命令初始化，空命令
 #define BASE_CMD_GET_ASSOCLIST        0x01        //获取基站的关联列表   
+#define BASE_CMD_OPEN_DOOR            0x02        //远程开门
 
 
 
@@ -119,7 +120,7 @@ TCP_C_Extern Typedef_Frame Frame;      //当前文件和BaseApp.c是全局变量
 #define BASE_RESP_EOP_ERR       0x13        //帧尾错误
 
 //命令类型反馈
-#define BASE_RESP_NO_DOOR_LIST  0x20        //没有门锁关联列表信息
+//#define BASE_RESP_NO_DOOR_LIST  0x20        //没有门锁关联列表信息
 
 
 
