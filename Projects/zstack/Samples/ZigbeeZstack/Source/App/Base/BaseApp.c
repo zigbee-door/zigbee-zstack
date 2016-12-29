@@ -388,34 +388,26 @@ void BaseApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
   {
     case OPEN_DOOR_CMD_ID:
       
-      uint8 data[11] = {0x00};
-      uint8 i=0;
+      uint8 data[3] = {0x00};
+      
+      
+      doorId[0] = pkt->srcAddr.addr.shortAddr & 0xFF;
+      doorId[1] = (pkt->srcAddr.addr.shortAddr >> 8) & 0xFF;
    
+      data[0] = pkt-> LinkQuality;                              //data[0] 信号强度
       
-      doorId[0] =  pkt->srcAddr.addr.shortAddr & 0xFF;         
-      doorId[1] =  (pkt->srcAddr.addr.shortAddr >> 8) & 0xFF;
-      //strncpy(data,pkt->srcAddr.addr.extAddr,Z_EXTADDR_LEN);    //data[0]~data[7] MAC地址
-      
-      
-      for(i=0;i<Z_EXTADDR_LEN;i++) {
-        data[i] = pkt->srcAddr.addr.extAddr[i];
-      }
-      
-      data[Z_EXTADDR_LEN] = pkt-> LinkQuality;                  //data[8] 信号强度
-      
-      if(pkt -> cmd.DataLength == 0x02) {                       //data[9]~data[10] 电池电量
-       
-        data[Z_EXTADDR_LEN+1] = pkt -> cmd.Data[0];
-        data[Z_EXTADDR_LEN+2] = pkt -> cmd.Data[1];  
+      if(pkt -> cmd.DataLength == 0x02) {                       //data[1]~data[2] 电池电量 
+        data[1] = pkt -> cmd.Data[0];
+        data[2] = pkt -> cmd.Data[1];  
       } else {
-        data[Z_EXTADDR_LEN+1] = 0x00; 
-        data[Z_EXTADDR_LEN+2] = 0x00; 
+        data[1] = 0x00; 
+        data[2] = 0x00; 
       }
       
   
       
       
-      Tcp_Send(BASE_CMD_OPEN_DOOR,doorId,BASE_RESP_OK,data,11);
+      Tcp_Send(BASE_CMD_OPEN_DOOR,doorId,BASE_RESP_OK,data,3);
       
       break;
       
