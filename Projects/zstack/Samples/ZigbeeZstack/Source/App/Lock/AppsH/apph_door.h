@@ -46,7 +46,7 @@ DOOR_C_Extern uint8 DoorStatus;
  * ------------------------------------------------------------------------------------------------
  */
 void Door_Open(uint8 Led);
-void Door_Close(uint8 Led);
+void Door_Close(void);
 void Door_Open_Close(void);
 
 #endif

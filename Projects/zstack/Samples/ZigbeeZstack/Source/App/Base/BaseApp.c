@@ -32,6 +32,7 @@
 #include "dri_iport.h"
 #include "app_tcp.h"
 
+#include "AddrMgr.h"
 
 /*********************************************************************
  * 全局变量
@@ -86,20 +87,16 @@ uint8 BaseAppFlashCounter = 0;
 
 
 /*********************************************************************
- * 关联表
+ * 关联表，自己定义
  */
 
-typedef struct
-{
-  uint8 extAddr[8];   //MAC地址
-  uint16 doorId;      //门锁ID
-  
-  
-  
-  
-} associate_t;
-
-associate_t associateList;      
+//typedef struct
+//{
+//  uint8 extAddr[8];   //MAC地址
+//  uint16 shortAddr;   //网络地址
+//} associate_t;
+//
+//associate_t associateList[NWK_MAX_DEVICES];      
 
 
 
@@ -266,7 +263,8 @@ uint16 BaseApp_ProcessEvent( uint8 task_id, uint16 events )
     uint8 data[Rx_BUFF] = {0x00};
     uint8 cmd = Frame.CMD;
     uint8 doorId[2] = {Frame.DOOR_ID[0],Frame.DOOR_ID[1]};
-    uint8 i=0;
+    uint8 i,j=0;
+    AddrMgrEntry_t addrEntry;   //MAC地址结构体，和关联表的索引有关系
     
     if(Frame.LENG - MIN_LENG)
     {
@@ -282,26 +280,46 @@ uint16 BaseApp_ProcessEvent( uint8 task_id, uint16 events )
       /*1. 获取基站的关联列表 */
       case BASE_CMD_GET_ASSOCLIST:  
         
+        /*1.1 遍历最大允许的终端设备数量，遍历关联表*/
         for(i=0;i<NWK_MAX_DEVICES;i++) 
         {
-          if(AssociatedDevList[i].shortAddr != 0xFFFF) { //也可能不是FFFF，这里需要注意
-            data[2*i] = AssociatedDevList[i].shortAddr & 0xFF;
-            data[2*i+1] = (AssociatedDevList[i].shortAddr >> 8) & 0xFF;
+          /*1.1.1 如果关联表中有数据*/ 
+          if(AssociatedDevList[i].shortAddr != 0xFFFF)      //初始化shortAddr的值是0xFFFF
+          {   
+            /*1.1.1 根据索引匹配MAC地址*/
+            addrEntry.index = i;                            
+            if(AddrMgrEntryGet(&addrEntry))                 //把结构体填充完成
+            {
+              /*1.1.1.1 如果网络地址一样，也就是确保MAC地址和网络地址是匹配的*/
+              if(addrEntry.nwkAddr == AssociatedDevList[i].shortAddr)   
+              {
+                  //获取网络地址
+                  data[10*i] = AssociatedDevList[i].shortAddr & 0xFF;             //data最大210
+                  data[10*i+1] = (AssociatedDevList[i].shortAddr >> 8) & 0xFF;    //data
+                  
+                  //获取8为mac地址
+                  for(j=0;j<Z_EXTADDR_LEN;j++) {                      
+                    data[10*i+2+j] = addrEntry.extAddr[j];
+                  } 
+              }
+            }
           } 
+               
+          /*1.1.2 关联表中无数据或者数据遍历完毕*/      
           else
           { 
-            /*有门锁列表信息*/
+            /*1.1.2.1 有门锁列表信息*/
             if(i)
             {
-              Tcp_Send(BASE_CMD_GET_ASSOCLIST,doorId,BASE_RESP_OK,data,2*i);           //发送信息给上位机
+              Tcp_Send(BASE_CMD_GET_ASSOCLIST,doorId,BASE_RESP_OK,data,10*i);   //发送信息给上位机
             }
-            /*无门锁列表信息*/
+            /*1.1.2.2 无门锁列表信息*/
             else 
             {
-              Tcp_Send(BASE_CMD_GET_ASSOCLIST,doorId,BASE_RESP_OK,data,i);   //无门锁列表信息
+              Tcp_Send(BASE_CMD_GET_ASSOCLIST,doorId,BASE_RESP_OK,data,i);      //无门锁列表信息
             }
             
-            break;                                                                     //如果等于就跳出循环
+            break;                                                               //跳出循环
           }
         }
         
@@ -363,7 +381,6 @@ uint16 BaseApp_ProcessEvent( uint8 task_id, uint16 events )
 
 void BaseApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
 {
-  uint8 SendData[RF_MAX_BUFF];
   uint8 doorId[2] = {0x00};
 
   //判断接收到的簇ID
@@ -371,9 +388,34 @@ void BaseApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
   {
     case OPEN_DOOR_CMD_ID:
       
-      doorId[0] =  pkt->srcAddr.addr.shortAddr & 0xFF;
+      uint8 data[11] = {0x00};
+      uint8 i=0;
+   
+      
+      doorId[0] =  pkt->srcAddr.addr.shortAddr & 0xFF;         
       doorId[1] =  (pkt->srcAddr.addr.shortAddr >> 8) & 0xFF;
-      Tcp_Send(BASE_CMD_OPEN_DOOR,doorId,BASE_RESP_OK,SendData,0);
+      //strncpy(data,pkt->srcAddr.addr.extAddr,Z_EXTADDR_LEN);    //data[0]~data[7] MAC地址
+      
+      
+      for(i=0;i<Z_EXTADDR_LEN;i++) {
+        data[i] = pkt->srcAddr.addr.extAddr[i];
+      }
+      
+      data[Z_EXTADDR_LEN] = pkt-> LinkQuality;                  //data[8] 信号强度
+      
+      if(pkt -> cmd.DataLength == 0x02) {                       //data[9]~data[10] 电池电量
+       
+        data[Z_EXTADDR_LEN+1] = pkt -> cmd.Data[0];
+        data[Z_EXTADDR_LEN+2] = pkt -> cmd.Data[1];  
+      } else {
+        data[Z_EXTADDR_LEN+1] = 0x00; 
+        data[Z_EXTADDR_LEN+2] = 0x00; 
+      }
+      
+  
+      
+      
+      Tcp_Send(BASE_CMD_OPEN_DOOR,doorId,BASE_RESP_OK,data,11);
       
       break;
       

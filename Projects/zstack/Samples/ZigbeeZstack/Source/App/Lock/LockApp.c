@@ -29,6 +29,8 @@
                                  MISO(SPI)  P0_3      普通IO口，设置为输入
                                  RST        P1_7      普通IO口，设置为输出
 
+  7.ADC                     ->   电池电压   P0_0      模拟外设IO口,设置为AIN0输入
+
 
 **************************************************************************************************/
 
@@ -56,6 +58,7 @@
 
 /* 驱动层 */
 #include "dri_key.h"
+#include "dri_adc.h"
 
 
 /* 设备层 */
@@ -153,7 +156,8 @@ void LockApp_Init( uint8 task_id )
   Buzzer_Timer4_Init();             //定时器4初始化(覆盖了Z-STACK的配置)
   Motor_Init();                     //P0_6 P0_7 P1_0 P1_1 电机驱动初始化
   I2C_Init();                       //P1_2 P1_3 I2C初始化
-  Spi_Init();                       //P1.2、P1.3、P1.7、P0.2、P0.3 读卡器端口初始化    
+  Spi_Init();                       //P1.2、P1.3、P1.7、P0.2、P0.3 读卡器端口初始化
+  Adc_Init();                       //P0.0 Adc端口初始化
   
   /*Devices设备初始化*/
   MFRC522_Init();                   //MFRC522读卡模块初始化
@@ -167,7 +171,7 @@ void LockApp_Init( uint8 task_id )
  
   
   Buzzer_System_Start();               //系统应用启动提示声音
-  Door_Close(LedOff);
+  Door_Close();
   
   
   
@@ -295,13 +299,15 @@ uint16 LockApp_ProcessEvent( uint8 task_id, uint16 events )
              Delay_Ms(1000);
              Buzzer_One_Led(LedOn);
              Card_Authorization(BlockData[0],DoorId);      //卡号授权或删权处理
-             Door_Close(LedOff);  
+             Door_Close();  
+             LED_OFF(); //暂时先不检测Adc         
           }
           
           /*1.1.1.2.2 总卡*/
           else if((BlockData[0] == TotalCard) && (BlockData[1] == TotalCard))   
           {
             Door_Open_Close();
+            LED_OFF();  //暂时先不检测Adc
           }
         }
         
@@ -310,7 +316,9 @@ uint16 LockApp_ProcessEvent( uint8 task_id, uint16 events )
         {
           if(Data_CommonCard_Confirm(BlockData+12)) 
           {
+            
             Door_Open_Close();   
+            LED_OFF();  //暂时先不检测Adc
           }
           
           else
@@ -410,7 +418,7 @@ void LockApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
   
 //  byte buf[3];
   
-  uint8 SendData[RF_MAX_BUFF];
+  //uint8 SendData[RF_MAX_BUFF];
 
   //判断接收到的簇ID
   switch ( pkt->clusterId )
@@ -447,8 +455,17 @@ void LockApp_MessageMSGCB( afIncomingMSGPacket_t *pkt )
       /*远程开门命令*/
       case OPEN_DOOR_CMD_ID:
         
-        LockApp_SendMessage(&LockApp_Single_DstAddr,SendData,0,OPEN_DOOR_CMD_ID);   //反馈给基站已经收到命令
-        Door_Open_Close();   
+        uint16 AdcValue = 0x00;
+        uint8 data[2] = {0x00};
+        Door_Open_Close();            //需要注意开关电机2s，其中等待2s，总共一个开关门动作可能需要4s时间 
+        Delay_Ms(10);                 //让电机回转以后再测量
+        AdcValue = Adc_GetVoltage();  //8191是满电量
+        data[0] = AdcValue & 0xFF;
+        data[1] = (AdcValue  >> 8) & 0xFF; 
+        LED_OFF();
+        
+        LockApp_SendMessage(&LockApp_Single_DstAddr,data,2,OPEN_DOOR_CMD_ID);   //反馈给基站已经收到命令
+        
         
         
         break;

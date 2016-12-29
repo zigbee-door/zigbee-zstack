@@ -60,7 +60,7 @@ void Door_Open(uint8 Led)
  * @return      无
  **************************************************************************************************
  */
-void Door_Close(uint8 Led)
+void Door_Close()
 {
   Motor_H2ON();
   Motor_H2ON();
@@ -98,15 +98,15 @@ void Door_Close(uint8 Led)
   Motor_H1H2OFF();
   Buzzer_Door_Close(); 
   
-  if(Led == LedOff)
-  {
-    LED_OFF();
-  }
-  
-  else
-  {
-    LED_ON();
-  }
+//  if(Led == LedOff)
+//  {
+//    LED_OFF();
+//  }
+//  
+//  else
+//  {
+//    LED_ON();
+//  }
   
 }
 
@@ -123,7 +123,7 @@ void Door_Close(uint8 Led)
 
 void Door_Open_Close(void)
 { 
-  uint16 i = 60;                 //最大允许延时3s
+  uint16 i = 40;                 //最大允许延时2s
   DoorStatus = PUSHOUT;           //锁扣默认在外面，没有压入
   
   Door_Open(LedOn);
@@ -141,5 +141,5 @@ void Door_Open_Close(void)
   }
   
   DoorStatus = PUSHOUT;
-  Door_Close(LedOff);
+  Door_Close();
 }
